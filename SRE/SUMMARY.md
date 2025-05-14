@@ -10,6 +10,8 @@
   - [组成原理]
   - [数据结构]
 
+- [工具](Tools/)
+
 - [Python](Python/Python介绍.md)
   - [Python基础](Python/Python基础/Python环境部署.md)
     - [01.Python环境部署](Python/Python基础/Python环境部署.md)
@@ -28,7 +30,7 @@
   - [Python面向对象](Python/Python面向对象/初识面向对象.md)
     - [01.初识面向对象](Python/Python面向对象/初识面向对象.md)
     - [02.封装](Python/Python面向对象/封装.md)
-    - [03.类的空间问题及关系](Python/0Python面向对象/类空间问题及类的关系.md)
+    - [03.类的空间问题及关系](Python/Python面向对象/类空间问题及类的关系.md)
     - [04.继承与多态](Python/Python面向对象/继承与多态.md)
     - [05.类的成员](Python/Python面向对象/类的成员.md)
     - [06.反射与双下方法](Python/Python面向对象/反射与双下方法.md)
