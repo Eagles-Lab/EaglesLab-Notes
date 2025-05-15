@@ -32,4 +32,10 @@
 ## 06. Create a pull request
 
 1. 回到 `https://github.com/<your-account>/155SRE` ，点击 Compare & pull request
-2. 选择 `base repository: Eagles-Lab/155SRE base: main`，添加标题和描述信息，点击 Create pull request 
+2. 选择 `base repository: Eagles-Lab/155SRE base: main`，添加标题和描述信息，点击 Create pull request
+
+## 备注
+
+1. 关注 pull request 的 comment 信息，该信息为老师们 review 后的结果。
+2. 每次 pull request 需要老师们 merge 后才算一次完整流程。
+3. 一次 pull request 可以进行多次 commint & push。
