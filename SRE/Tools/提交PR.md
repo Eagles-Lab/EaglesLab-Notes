@@ -12,7 +12,7 @@
 
 1. 浏览器在右上角头像，点击 `Your repositories` ，点击上述 Fork 的仓库
 2. 复制浏览器链接，例 `https://github.com/<your-account>/155SRE` 
-3. 进入 Github Desktop 点击 Clone Repository，粘贴上述链接，并点击 Clone
+3. 进入 Github Desktop 点击 Clone Repository，选择 URL 粘贴上述链接，并点击 Clone
 
 ## 03. Creating a branch
 
