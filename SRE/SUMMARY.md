@@ -66,6 +66,7 @@
   - [16.管道与重定向](Linux基础/管道与重定向.md)
 
 - [Linux服务](Linux服务/01.SSH远程管理协议.md)
+  - [Nginx介绍](Linux服务/07.Nginx.md)
 
 - [Docker](Docker/Docker.md)
   - [01.Docker介绍](Docker/01.Docker介绍.md)
