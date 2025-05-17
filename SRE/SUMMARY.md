@@ -2,7 +2,7 @@
 
 - [前言](README.md)
 
-- [基础知识]()
+- [基础知识](Tools/提交PR.md)
   - [网络]
   - [操作系统](操作系统/操作系统发展史.md)
     - [01.操作系统发展史](操作系统/操作系统发展史.md)
@@ -28,7 +28,7 @@
   - [Python面向对象](Python/Python面向对象/初识面向对象.md)
     - [01.初识面向对象](Python/Python面向对象/初识面向对象.md)
     - [02.封装](Python/Python面向对象/封装.md)
-    - [03.类的空间问题及关系](Python/0Python面向对象/类空间问题及类的关系.md)
+    - [03.类的空间问题及关系](Python/Python面向对象/类空间问题及类的关系.md)
     - [04.继承与多态](Python/Python面向对象/继承与多态.md)
     - [05.类的成员](Python/Python面向对象/类的成员.md)
     - [06.反射与双下方法](Python/Python面向对象/反射与双下方法.md)
@@ -66,6 +66,7 @@
   - [16.管道与重定向](Linux基础/管道与重定向.md)
 
 - [Linux服务](Linux服务/01.SSH远程管理协议.md)
+  - [Nginx介绍](Linux服务/07.Nginx.md)
 
 - [Docker](Docker/Docker.md)
   - [01.Docker介绍](Docker/01.Docker介绍.md)
