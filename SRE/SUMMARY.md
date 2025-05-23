@@ -28,7 +28,7 @@
     - [06.反射与双下方法](Python/Python面向对象/反射与双下方法.md)
   - [Python网络编程](Python/Python网络编程/操作系统基础.md)
     - [01.操作系统基础](Python/Python网络编程/操作系统基础.md)
-    - [02.套接字的工作流程](Python/Python网络编程/套接字的工作流程.md)
+    - [02.Socket编程基础](Python/Python网络编程/Socket编程基础.md)
   - [Python并发编程](Python/Python并发编程/操作系统发展史.md)
     - [01.操作系统发展史](Python/Python并发编程/操作系统发展史.md)
     - [02.进程](Python/Python并发编程/进程.md)
