@@ -62,6 +62,10 @@
 - [Linux服务](Linux服务/01.SSH远程管理协议.md)
   - [Nginx介绍](Linux服务/07.Nginx.md)
 
+- [数据库](数据库/08.MySQL数据库.md)
+  - [MySQL](数据库/08.MySQL数据库.md)
+  - [Redis](数据库/10.redis.md)
+
 - [Docker](Docker/Docker.md)
   - [01.Docker介绍](Docker/01.Docker介绍.md)
   - [02.Docker安装](Docker/02.Docker安装.md)
