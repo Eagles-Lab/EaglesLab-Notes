@@ -158,12 +158,9 @@ poweroff
 
 Linux 远程连接命令行工具有很多:
 
-- xshell
-  - 收费工具，有免费版，基本能满足需求，目前比较主流
-- putty
-  - 开源工具，功能比较简单
-- MobaXterm
-  - 免费工具，功能比较齐全，本次课程中推荐使用
+- xshell：收费工具，有免费版，基本能满足需求，目前比较主流
+- putty：开源工具，功能比较简单
+- MobaXterm：免费工具，功能比较齐全，本次课程中推荐使用
 
 首先查看虚拟机的IP地址，也就是 Linux 服务器的 IP 地址，登录进虚拟机之后输入`ip address`可以查看
 
@@ -194,6 +191,6 @@ Linux 远程连接命令行工具有很多:
 
 <img src="Linux系统安装/MobaXterm-登录成功.png" alt="img-MobaXterm-登录成功" style="zoom:80%;" />
 
-MobaXterm 工具只是用来远程连接和管理我们的 RockyLinux 虚拟机，所以在使用的时候，我们必须先启动RockyLinux 虚拟机。然后再次使用 MobaXterm 工具连接上来。并且我们在 MobaXterm 上面执行的命令，也都会被传递到我们的 RockyLinux 上面执行。
+MobaXterm 工具只是用来远程连接和管理我们的 RockyLinux 虚拟机，所以在使用的时候，我们必须先启动 RockyLinux 虚拟机。然后再次使用 MobaXterm 工具连接上来。并且我们在 MobaXterm 上面执行的命令，也都会被传递到我们的 RockyLinux 上面执行。
 
 ![img-MobaXterm-执行命令](Linux系统安装/MobaXterm-执行命令.png)

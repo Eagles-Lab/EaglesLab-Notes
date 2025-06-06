@@ -114,9 +114,9 @@ Sort entries alphabetically if none of -cftuvSUX nor --sort is specified.
 
 # 查看 /etc/ssh/ 目录下的文件，如果有文件夹，那么将文件夹中的文件也显示出来
 [root@localhost ~]# ls -FR /etc/ssh/
+
 # 显示详细的信息
 [root@localhost ~]# ls -FRl
-
 ```
 
 ## cd
@@ -133,11 +133,12 @@ cd: cd [-L|[-P [-e]] [-@]] [dir]
 ```shell
 # 跳转到 /usr/bin 目录下
 [root@localhost ~]# cd /usr/bin
+
 # 跳到自己的 home 目录
 [root@localhost bin]# cd ~
+
 # 跳到目前目录的上一层
 [root@localhost ~]# cd ..
-
 ```
 
 ## pwd
@@ -392,3 +393,29 @@ drwxr-xr-x. 2 root root   19 8月  21 12:15 home
 [root@localhost ~]# echo "alias wl='ip address'" >> /etc/bashrc
 
 ```
+
+# 环境变量
+
+环境变量（environment variables）一般是指在操作系统中用来指定操作系统运行环境的一些参数，如：临时文件夹位置和系统文件夹位置等。
+
+简单的理解就是告诉操作系统在程序运行的时候，有一些默认的设置是什么。
+
+比如上面我们修改了 `LANG` 变量，就是一个环境变量，会影响到显示的语言是中文还是英文。
+
+比如在讲解 `pwd` 命令的时候，我们修改了 `$PWD` 变量，就影响了当前所处的文件夹。
+
+在我们使用 shell 命令行输入命令的时候，其实每个命令都是有一个可执行文件去完成我们下达的任务，这个可执行文件在操作系统中是分布在不同的文件夹中的，我们总不能每次执行的时候都要告诉操作系统这个文件在哪里，那么就算是查看一个文件，我们都需要输入如下的命令：
+
+```shell
+# 在Linux中，ls的可执行程序在/usr/bin目录下
+[root@localhost ~]# /usr/bin/ls -lh
+```
+
+这样就太麻烦了，所以就指定了一个环境变量 `$PATH`，这个变量中有很多的目录地址，当我们执行命令的时候，操作系统就会到这些目录中查找，是否存在你所输入的命令。如果有那么就会去执行。
+
+```shell
+[root@localhost ~]# echo $PATH
+/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+```
+
+如果你想让自己安装的某个软件可以在操作系统的任意位置直接输入文件名执行，那么你也可以把自定义的目录加入到这个 `$PATH` 中
