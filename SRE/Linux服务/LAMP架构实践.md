@@ -252,5 +252,3 @@ rm -rf typecho-theme-sagiri-master.zip
 访问网页前端，查看最终的效果
 
 ![image-20211106113600091](LAMP%E6%9E%B6%E6%9E%84%E5%AE%9E%E8%B7%B5/image-20211106113600091.png)
-
-# 
