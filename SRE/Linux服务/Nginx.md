@@ -40,8 +40,6 @@ Nginx 则是免费的、开源的、⾼性能的HTTP和反向代理服务器、�
 - 低内存消耗：10000个keep-alive连接模式下的⾮活动连接，仅需2.5M内存
 - event-driven,aio,mmap（内存映射），sendfile
 
-
-
 # Nginx架构和进程结构
 
 ## Nginx架构
@@ -93,7 +91,7 @@ Nginx 则是免费的、开源的、⾼性能的HTTP和反向代理服务器、�
 
 <img src="Nginx/image-20240715200658649.png" alt="image-20240715200658649" style="zoom:80%;" />
 
-**Master进程工作细节：**
+**Master-Worker进程工作细节：**
 
 <img src="Nginx/image-20240715200727069.png" alt="image-20240715200727069" style="zoom:80%;" />
 
@@ -145,8 +143,8 @@ Nginx版本分为Mainline version(主要开发版本)、Stable version(当前最
 
 **其中：**
 
-- yum的版本比较旧
-- 编译安装可以更方便自定义相关路径
+- yum下载的相关文件都是放在默认的位置，不方便我们进一步研究。
+- 编译安装可以指定具体的版本，而且更方便自定义相关路径
 - 使用源码编译可以自定义相关功能，更方便业务的上的使用
 
 ## YUM部署Nginx
@@ -156,20 +154,22 @@ Nginx版本分为Mainline version(主要开发版本)、Stable version(当前最
 ```bash
 [root@localhost ~]# yum install -y epel-release
 [root@localhost ~]# yum info nginx
-可安装的软件包
-名称    ：nginx
-架构    ：x86_64
-时期       ：1
-版本    ：1.20.1
-发布    ：10.el7
-大小    ：588 k
-源    ：epel/x86_64
-简介    ： A high performance web server and reverse proxy server
-网址    ：https://nginx.org
-协议    ： BSD
-描述    ： Nginx is a web server and a reverse proxy server for HTTP, SMTP, POP3 and
-         : IMAP protocols, with a strong focus on high concurrency, performance and low
-         : memory usage.
+Last metadata expiration check: 0:03:49 ago on Thu Feb  6 09:59:28 2025.
+Available Packages
+Name         : nginx
+Epoch        : 2
+Version      : 1.20.1
+Release      : 20.el9.0.1
+Architecture : x86_64
+Size         : 36 k
+Source       : nginx-1.20.1-20.el9.0.1.src.rpm
+Repository   : appstream
+Summary      : A high performance web server and reverse proxy server
+URL          : https://nginx.org
+License      : BSD
+Description  : Nginx is a web server and a reverse proxy server for HTTP, SMTP, POP3 and
+             : IMAP protocols, with a strong focus on high concurrency, performance and low
+             : memory usage.
 [root@localhost ~]# yum -y install nginx
 ```
 
@@ -198,9 +198,9 @@ LISTEN      0      100       ::1:25                     :::*
 [root@localhost ~]# setenforce 0
 ```
 
-在浏览器中输入IP地址：192.168.88.140
+​		在浏览器中输入IP地址：192.168.88.10
 
-<img src="Nginx/image-20240715202650792.png" alt="image-20240715202650792" style="zoom:80%;" />
+<img src="Nginx/image-20250206100602278.png" alt="image-20250206100602278" style="zoom:80%;" />
 
 看到上述页面，说明已经成功部署好了nginx 的环境。
 
@@ -218,22 +218,25 @@ LISTEN      0      100       ::1:25                     :::*
 
 通过编译的方式安装nginx前，建议先移除之前yum安装的nginx，防止多个nginx之间相互冲突~
 
-`yum remove -y nginx`
+```bash
+[root@localhost ~]# yum remove -y nginx
+```
 
-1. 从官网下载源码包，这里以1.20.0为例：
+1. 从官网下载源码包，这里以1.22.0为例：
 
 ```bash
-[root@localhost ~]# wget http://nginx.org/download/nginx-1.20.0.tar.gz -P /usr/local/src/
+[root@localhost ~]# wget http://nginx.org/download/nginx-1.22.0.tar.gz -P /usr/local/src/
 [root@localhost ~]# cd /usr/local/src
-# 解压
-[root@localhost src]# tar xzvf nginx-1.20.0.tar.gz 
-[root@localhost src]# cd nginx-1.20.0
+
+# 解压源码包
+[root@localhost src]# tar xzvf nginx-1.22.0.tar.gz
+[root@localhost src]# cd nginx-1.22.0
 ```
 
 2. 查看编译帮助
 
 ```bash
-[root@localhost nginx-1.20.0]# ./configure --help
+[root@localhost nginx-1.22.0]# ./configure --help
 ```
 
 3. 开始编译
@@ -242,9 +245,9 @@ LISTEN      0      100       ::1:25                     :::*
 
 ```bash
 # 先安装编译环境
-[root@localhost nginx-1.20.0]# yum -y install gcc pcre-devel openssl-devel zlib-devel
-[root@localhost nginx-1.20.0]# useradd -r -s /sbin/nologin nginx
-[root@localhost nginx-1.20.0]# ./configure --prefix=/apps/nginx \
+[root@localhost nginx-1.22.0]# yum -y install gcc pcre-devel openssl-devel zlib-devel
+[root@localhost nginx-1.22.0]# useradd -r -s /sbin/nologin nginx
+[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
 --user=nginx \
 --group=nginx \
 --with-http_ssl_module \
@@ -257,48 +260,81 @@ LISTEN      0      100       ::1:25                     :::*
 --with-stream_ssl_module \
 --with-stream_realip_module \
 --with-file-aio
-[root@localhost nginx-1.20.0]# make -j 2 && make install
+[root@localhost nginx-1.22.0]# make -j 2 && make install
 ```
 
 4. 善后工作
 
 ```bash
-[root@localhost nginx-1.20.0]# chown -R nginx.nginx /apps/nginx
+[root@localhost nginx-1.22.0]# chown -R nginx.nginx /apps/nginx
+
 # 创建连接文件，使得可以全局使用nginx命令
-[root@localhost nginx-1.20.0]# ln -s /apps/nginx/sbin/nginx /usr/bin/
-[root@localhost nginx-1.20.0]# nginx -v
+[root@localhost nginx-1.22.0]# ln -s /apps/nginx/sbin/nginx /usr/sbin/
+[root@localhost nginx-1.22.0]# nginx -v
 ```
 
 - nginx完成安装以后，有四个主要的目录
-  - **conf:**保存nginx所有的配置文件，其中nginx.conf是nginx服务器的最核心最主要的配置文件，其他的.conf则是用来配置nginx相关的功能的，例如fastcgi功能使用的是fastcgi. conf和fastcgi.params两个文件，配置文件一般都有个样板配置文件，是文件名. default结尾，使用的使用将其复制为并将default去掉即可。
-  - **html:**目录中保存了nginx服务器的web文件，但是可以更改为其他目录保存web文件，另外还有一个50x的web文件是默认的错误页面提示页面。
-  - **logs:**用来保存ngi nx服务器的访问日志错误日志等日志，logs目录可以放在其他路径，比如/var/logs/nginx里面。
-  - **sbin:**保存nginx二进制启动脚本，可以接受不同的参数以实现不同的功能。
+  - **conf:** 保存nginx所有的配置文件，其中nginx.conf是nginx服务器的最核心最主要的配置文件，其他的.conf则是用来配置nginx相关的功能的，例如fastcgi功能使用的是fastcgi. conf和fastcgi.params两个文件，配置文件一般都有个样板配置文件，是文件名. default结尾，使用的使用将其复制为并将default去掉即可。
+  - **html:** 目录中保存了nginx服务器的web文件，但是可以更改为其他目录保存web文件，另外还有一个50x的web文件是默认的错误页面提示页面。
+  - **logs:** 用来保存nginx服务器的访问日志错误日志等日志，logs目录可以放在其他路径，比如/var/logs/nginx里面。
+  - **sbin:** 保存nginx二进制启动脚本，可以接受不同的参数以实现不同的功能。
 
 可以使用tree命令查看目录结构：
 
 ```bash
-[root@localhost nginx-1.20.0]# yum install -y tree
-[root@localhost nginx-1.20.0]# tree /apps/nginx -C -L 1
+[root@localhost nginx-1.22.0]# tree /apps/nginx
 /apps/nginx
 ├── conf
+│   ├── fastcgi.conf
+│   ├── fastcgi.conf.default
+│   ├── fastcgi_params
+│   ├── fastcgi_params.default
+│   ├── koi-utf
+│   ├── koi-win
+│   ├── mime.types
+│   ├── mime.types.default
+│   ├── nginx.conf
+│   ├── nginx.conf.default
+│   ├── scgi_params
+│   ├── scgi_params.default
+│   ├── uwsgi_params
+│   ├── uwsgi_params.default
+│   └── win-utf
 ├── html
+│   ├── 50x.html
+│   └── index.html
 ├── logs
 └── sbin
+    └── nginx
 ```
 
 ### 启动和停止Nginx
 
 ```bash
-[root@localhost nginx-1.20.0]# nginx 
-[root@localhost nginx-1.20.0]# nginx -s stop
+[root@localhost nginx-1.22.0]# nginx 
+[root@localhost nginx]# ss -nlt
+State       Recv-Q      Send-Q            Local Address:Port             Peer Address:Port      Process
+LISTEN      0           128                     0.0.0.0:22                    0.0.0.0:*
+LISTEN      0           511                     0.0.0.0:80                    0.0.0.0:*
+LISTEN      0           128                        [::]:22                       [::]:*
 ```
 
 浏览器中访问测试：
 
 防火墙和SElinux不要忘记了~
 
-<img src="Nginx/image-20240715204435304.png" alt="image-20240715204435304" style="zoom: 80%;" />
+```bash
+[root@localhost nginx]# systemctl stop firewalld
+[root@localhost nginx]# setenforce 0
+```
+
+<img src="Nginx/image-20250206102715603.png" alt="image-20250206102715603" style="zoom:80%;" />
+
+**停止nginx：**
+
+```bash
+[root@localhost nginx-1.22.0]# nginx -s stop
+```
 
 ### 配置Nginx自启动
 
@@ -384,7 +420,7 @@ include /apps/nginx/conf.d/*.conf
 
 <img src="Nginx/image-20240715214934896.png" alt="image-20240715214934896" style="zoom:80%;" />
 
-<img src="Nginx/image-20240715215034229.png" alt="image-20240715215034229" style="zoom:80%;" />
+<img src="Nginx/image-20240715215034229.png" alt="image-20240715215034229"  />
 
 ## 全局配置
 
@@ -425,7 +461,7 @@ CPU MASK：0001    0号CPU
 2. 修改nginx.conf，在全局配置中增加对cpu的控制字段
 
 ```bash
-[root@localhost nginx-1.20.0]# vim /apps/nginx/conf/nginx.conf
+[root@localhost nginx-1.22.0]# vim /apps/nginx/conf/nginx.conf
 #user  nobody;
 worker_processes  4;
 worker_cpu_affinity 0001 0010 0100 1000;
@@ -433,14 +469,14 @@ worker_cpu_affinity 0001 0010 0100 1000;
 # 这里配置的时候，注意自己虚拟机上cpu的数量，不要超过自己虚拟机cpu核心数
 
 #重载配置
-[root@localhost nginx-1.20.0]# nginx -t
-[root@localhost nginx-1.20.0]# systemctl restart nginx
+[root@localhost nginx-1.22.0]# nginx -t
+[root@localhost nginx-1.22.0]# systemctl restart nginx
 ```
 
 3. 查看nginx进程所使用对应的cpu
 
 ```bash
-[root@localhost nginx-1.20.0]# watch -n.5 'ps axo pid,cmd,psr |grep nginx'
+[root@localhost nginx-1.22.0]# watch -n.5 'ps axo pid,cmd,psr |grep nginx'
 # 查看nginx进程对应的CPU
   6834 nginx: master process /apps   2
  47621 nginx: worker process         0
@@ -455,7 +491,7 @@ worker_cpu_affinity 0001 0010 0100 1000;
 # 错误日志记录配置，语法：error_log file [debug | info | notice | warn | error | crit | alert |emerg]
 # error_log logs/error.log;
 # error_log logs/error.log notice;
-error_log /app/nginx/logs/error.log error;
+error_log /apps/nginx/logs/error.log error;
 ```
 
 ### 工作优先级与文件并发数
@@ -469,12 +505,12 @@ worker_rlimit_nofile 65536;     #所有worker进程能打开的文件数量上�
 
 
 # 案例-修改优先级
-root@localhost nginx-1.20.0]# vim /apps/nginx/conf/nginx.conf
+root@localhost nginx-1.22.0]# vim /apps/nginx/conf/nginx.conf
 worker_priority -20;
 
 #重载配置
-[root@localhost nginx-1.20.0]# nginx -t
-[root@localhost nginx-1.20.0]# systemctl restart nginx
+[root@localhost nginx-1.22.0]# nginx -t
+[root@localhost nginx-1.22.0]# systemctl restart nginx
 
 # 查看优先级
 [root@localhost ~]# watch -n.5 'ps axo pid,cmd,psr,nice |grep nginx'
@@ -504,7 +540,8 @@ events {
 - 默认配置并不支持高并发，在压力测试下会报错
 
 ```shell
-[root@localhost ~]# while true;do ab -c 5000 -n 10000 http://127.0.0.1/;sleep 0.5;done
+[root@localhost ~]# yum install -y httpd-tools
+[root@localhost ~]# while true;do ab -c 1000 -n 10000 http://127.0.0.1/;sleep 0.5;done
 
 [root@localhost ~]# tail /apps/nginx/logs/error.log
 2021/05/24 12:35:53 [crit] 6828#0: *10996 open() "/apps/nginx/html/index.html" failed (24: Too many open files), client: 127.0.0.1, server: localhost, request: "GET / HTTP/1.0", host: "127.0.0.1"
@@ -591,14 +628,13 @@ types {
 范例：识别php文件为text/html
 
 ```shell
-[root@localhost ~]# cat << eof > /apps/nginx/html/test.php
-> <?php
-> phpinfo();
-> ?>
-> eof
+[root@localhost ~]# cat /apps/nginx/html/test.php
+<?php
+        phpinfo();
+?>
 [root@localhost ~]# curl 127.0.0.1/test.php -I
 HTTP/1.1 200 OK
-Server: nginx/1.20.0
+Server: nginx/1.22.0
 Date: Mon, 24 May 2021 06:05:05 GMT
 Content-Type: application/octet-stream
 Content-Length: 20
@@ -620,9 +656,9 @@ http {
 默认情况下的响应报文
 
 ```bash
-[root@localhost nginx-1.20.0]#  curl -I 127.0.0.1
+[root@localhost nginx-1.22.0]#  curl -I 127.0.0.1
 HTTP/1.1 200 OK
-Server: nginx/1.20.0
+Server: nginx/1.22.0
 Date: Tue, 16 Jul 2024 11:35:41 GMT
 Content-Type: text/html
 Content-Length: 612
@@ -659,7 +695,7 @@ server_tokens on | off |build | string
 再次访问测试：
 
 ```bash
-[root@localhost nginx-1.20.0]# curl -I 127.0.0.1
+[root@localhost nginx-1.22.0]# curl -I 127.0.0.1
 HTTP/1.1 200 OK
 Server: nginx
 Date: Tue, 16 Jul 2024 11:39:35 GMT
@@ -696,16 +732,16 @@ http {
 [root@localhost ~]# vim /apps/nginx/conf.d/pc.conf
 server {
     listen 80;
-    server_name www.test.com;
+    server_name pc.test.com;
     location / {
         root /apps/nginx/html/pc;
     }
 }
 [root@localhost ~]# mkdir -p /apps/nginx/html/pc
-[root@localhost ~]# echo "hello world" > /apps/nginx/html/pc/index.html
+[root@localhost ~]# echo "hello pc web" > /apps/nginx/html/pc/index.html
 [root@localhost ~]# systemctl reload nginx
 [root@localhost conf]# vim /etc/hosts
-192.168.175.10 www.test.com
+192.168.88.10 pc.test.com
 ```
 
 - 创建移动端的网站配置
@@ -720,10 +756,10 @@ server {
     }
 }
 [root@localhost ~]# mkdir -p /apps/nginx/html/mobile
-[root@localhost ~]# echo "hello mobile" > /apps/nginx/html/mobile/index.html
+[root@localhost ~]# echo "hello mobile web" > /apps/nginx/html/mobile/index.html
 [root@localhost ~]# systemctl reload nginx
 [root@localhost conf]# vim /etc/hosts
-192.168.175.10 m.test.com
+192.168.88.10 m.test.com
 ```
 
 ### ROOT
@@ -737,33 +773,44 @@ server {
 server {
   listen 80;
   server_name a.test.com;
-  location / {
-    root /apps/nginx/html/www;
-  }
+
   location /about {
-    root /apps/nginx/html/about;    # 这样写其实访问的是/apps/nginx/html/下的about的about  /apps/nginx/html/about/about
+    root /apps/nginx/html/about;
+    # 这样写其实访问的是/apps/nginx/html/下的about的about  /apps/nginx/html/about/about
   }
 }
 [root@localhost conf]# vim /etc/hosts
-192.168.175.10 a.test.com
+192.168.88.10 a.test.com
+
 [root@localhost ~]# mkdir -p /apps/nginx/html/about
 [root@localhost ~]# echo "about" > /apps/nginx/html/about/index.html
+
 # 重启Nginx并访问测试,404
+[root@localhost html]# systemctl restart nginx
+[root@localhost html]# curl a.test.com/about/
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx/1.22.0</center>
+</body>
+</html>
+
+# 我们把root后买你的路径中去掉about，这样一来，路径就变成了/apps/nginx/html/about/
 [root@localhost conf]# vim /apps/nginx/conf.d/test.conf
 server {
   listen 80;
   server_name a.test.com;
-  location / {
-    root /apps/nginx/html/www;
-  }
-  
+
   location /about {
-    root /apps/nginx/html; 
-    #这样就好了
+    root /apps/nginx/html;
   }
 }
+
 # 重启Nginx并访问测试
 [root@localhost ~]# systemctl reload nginx
+[root@localhost ~]# curl a.test.com/about/
+about
 ```
 
 ### Alias
@@ -774,30 +821,28 @@ server {
 
 ```shell
 [root@localhost conf]# vim /apps/nginx/conf.d/test.conf
-
 server {
   listen 80;
   server_name a.test.com;
-  location / {
-    root /apps/nginx/html/www;
-  }
-    
-  location /about/ {    
+
+  location /about/ {
   # 使用alias的时候uri后面加了斜杠，下面的路径也必须加，不然403错误
-    alias /apps/nginx/html/about/;    
+    alias /apps/nginx/html/about/;
     # 当访问about的时候，会显示alias定义的/apps/nginx/html/about/里面的内容
   }
 }
+
 # 重启Nginx并访问测试
 [root@localhost ~]# systemctl reload nginx
-[root@localhost about]# curl a.test.com/about/
+[root@localhost ~]# curl a.test.com/about/
+about
 ```
 
 ### Location的详细使用
 
 在一个server中location配置段可存在多个，用于实现从uri到文件系统的路径映射; nginx会根据用户请求的URI来检查定义所有的location,按一定的优先级找出一 个最佳匹配，然后应用其配置。
 
-在没有使用正则表达式的时候，nginx会先在server中的多个location选取匹配度最高的一个uri, uri是用户请求的字符串，即域名后面的web文件路径，然后使用该location模块中的正则ur|和字符串，如果匹配成功就结束搜索，并使用此location处理此请求。
+在没有使用正则表达式的时候，nginx会先在server中的多个location选取匹配度最高的一个uri, uri是用户请求的字符串，即域名后面的web文件路径，然后使用该location模块中的正则uri和字符串，如果匹配成功就结束搜索，并使用此location处理此请求。
 
 location官方帮助:https://nginx.org/en/docs/http/ngx_http_core_module.html#location
 
@@ -818,7 +863,9 @@ location [ = | ~ | ~* | ^~ ] uri { ... }
 
 - 匹配优先级从高到低
   - `= ^~ ~/~* 不带符号`
+
 #### 官方范例
+
   - The “`/`” request will match configuration A
   - the “`/index.html`” request will match configuration B
   - the “`/documents/document.html`” request will match configuration C
@@ -882,7 +929,6 @@ server {
 
 ```shell
 [root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-
 server {
   listen 80;
   server_name a.test.com;
@@ -894,8 +940,9 @@ server {
     root /apps/nginx/html/images;
   }
 }
+
 [root@localhost conf.d]# mkdir -p /apps/nginx/html/images
-[root@localhost conf.d]#cd /apps/nginx/html/images && wget https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png 
+[root@localhost conf.d]# cd /apps/nginx/html/images && wget https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png 
 [root@localhost images]# mv PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png logo.jpg
 [root@localhost images]# systemctl restart nginx
 [root@localhost images]# curl http://a.test.com/logo.jpg
@@ -912,7 +959,7 @@ server {
   listen 80;
   server_name a.test.com;
   location ~ /A.?\.jpg {
-#A.jpg
+# A.jpg
 # Aa
 # AB
     index index.html;
@@ -986,24 +1033,31 @@ http://a.test.com/aa.jpg可以访问到
 
 ```shell
 [root@localhost conf.d]# mkdir - p /apps/nginx/html/static{1,2,3}
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-location = /1.jpg {
-  index index.html;
-  root /apps/nginx/html/static1;
+[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf\
+server{
+	listen 80;
+    server_name a.test.com;
+    location = /1.jpg {
+      index index.html;
+      root /apps/nginx/html/static1;
+    }
+    location /1.jpg {
+      index index.html;
+      root /apps/nginx/html/static2;
+    }
+    location ~* \.(gif|jpg|jpeg|bmp|png|tiff|tif|ico|wmf|js|css)$ {
+      index index.html;
+      root /apps/nginx/html/static3;
+    }
 }
-location /1.jpg {
-  index index.html;
-  root /apps/nginx/html/static2;
-}
-location ~* \.(gif|jpg|jpeg|bmp|png|tiff|tif|ico|wmf|js|css)$ {
-  index index.html;
-  root /apps/nginx/html/static3;
-}
-[root@localhost conf.d]# wget -O /apps/nginx/html/static1/1.jpg https://dummyimage.com/600x100/000/fff&text=static1 
-[root@localhost conf.d]# wget -O /apps/nginx/html/static2/1.jpg https://dummyimage.com/600x200/000/fff&text=static2 
-[root@localhost conf.d]# wget -O /apps/nginx/html/static3/1.jpg https://dummyimage.com/600x300/000/fff&text=static3
-重启nginx测试访问http:a.test.com/1.jpg
+[root@localhost conf.d]# wget -O /apps/nginx/html/static1/1.jpg "https://dummyimage.com/600x100/000/fff&text=static1"
+[root@localhost conf.d]# wget -O /apps/nginx/html/static2/1.jpg "https://dummyimage.com/600x200/000/fff&text=static2"
+[root@localhost conf.d]# wget -O /apps/nginx/html/static3/1.jpg "https://dummyimage.com/600x300/000/fff&text=static3"
+
+# 重启nginx测试访问http://a.test.com/1.jpg
 ```
+
+为了更方便的看出具体显示的是哪张图片，我们修改一下windows的hosts文件，然后通过浏览器访问测试......
 
 - 匹配优先级
   - `location = ` --> `location ^~ 路径`-->`location ~,~* 正则`-->`location 完整路径`-->`location 部分起始路径`>`/`
@@ -1059,24 +1113,25 @@ location ~* /app2 {
 范例：
 
 ```shell
-[root@www static3]# vim /apps/nginx/conf.d/test.conf
+[root@localhost static3]# vim /apps/nginx/conf.d/test.conf
 server {
-  listen 80;
-  server_name a.test.com;
-  deny all;
-  allow 192.168.112.0/24;
- location / {
-    root /apps/nginx/html/www;
- location = /1.jpg {
-  index index.html;
-  root /apps/nginx/html/static1;
-  allow 192.168.175.10;
-  deny all;
+    listen 80;
+    server_name a.test.com;
+    location = /1.jpg {
+        index index.html;
+        root /apps/nginx/html/static1;
+        allow 192.168.88.10;
+        deny all;
+	
+	}
 }
-}
-}
-禁止了主机访问，虚拟机本机可以访问刚才的1.jpg
+
+# 禁止了主机访问，虚拟机本机可以访问刚才的1.jpg
 ```
+
+Linux自己是192.168.88.10 所以自己可以访问。但是windows是192.168.88.1拒绝访问
+
+<img src="Nginx/image-20250206155731740.png" alt="image-20250206155731740" style="zoom:80%;" />
 
 ### Nginx账户认证功能
 
@@ -1108,18 +1163,18 @@ user2:$apr1$/NXK7rS7$1AUTuESFJEQW490XjTs851
 3. 编辑子配置文件`test.conf`
 
 ```shell
-[root@www static3]# vim /apps/nginx/conf.d/test.conf
+[root@localhost ~]# vim /apps/nginx/conf.d/test.conf
 server {
-  listen 80;
-  server_name a.test.com;
-  auth_basic "login password";
-  auth_basic_user_file /apps/nginx/conf/.htpasswd;
-location = /1.jpg {
-  index index.html;
-  root /apps/nginx/html/static1;
+    listen 80;
+    server_name a.test.com;
+    auth_basic "login password";
+    auth_basic_user_file /apps/nginx/conf/.htpasswd;
+    location = /1.jpg {
+        index index.html;
+        root /apps/nginx/html/static1;
+    }
 }
-}
-[root@www static3]# systemctl restart nginx
+[root@localhost ~]# systemctl restart nginx
 ```
 
 `auth_basic "login password";`
@@ -1130,6 +1185,10 @@ location = /1.jpg {
 
 - 这行配置指定了存储用户名和密码的文件路径为`/apps/nginx/conf/.htpasswd`。
 
+##### 访问测试
+
+<img src="Nginx/image-20250206160146402.png" alt="image-20250206160146402" style="zoom:80%;" />
+
 ### 自定义错误页面
 
 定义错误页，以指定的响应状态码进行响应,可用位置: http, server, location, if in location
@@ -1138,10 +1197,10 @@ location = /1.jpg {
 erro_page code ... [=[response]] uri;
 ```
 
-官方示例：
+**官方示例：**
 
 ```shell
-[root@www static3]# vim /apps/nginx/conf/nginx.conf
+[root@localhost static3]# vim /apps/nginx/conf/nginx.conf
 server {
 listen 80;
 server_name www.example.com;
@@ -1151,28 +1210,28 @@ location = /error.html {
 }
 ```
 
-范例：
+**范例：**
 
 ```shell
-[root@www static3]# vim /apps/nginx/conf.d/test.conf
+[root@localhost static3]# vim /apps/nginx/conf.d/test.conf
 server {
-  listen 80;
-  server_name a.test.com;
-  auth_basic "login password";
-  auth_basic_user_file /apps/nginx/conf/.htpasswd;
-  error_page 404 /40x.html;
-location = /1.jpg {
-  index index.html;
-  root /apps/nginx/static1;
+    listen 80;
+    server_name a.test.com;
+    auth_basic "login password";
+    auth_basic_user_file /apps/nginx/conf/.htpasswd;
+    error_page 404 /40x.html;
+    location = /1.jpg {
+        index index.html;
+        root /apps/nginx/static1;
+    }
+    location /40x.html{
+    	root /apps/nginx/html;
+    }
 }
-location /40x.html{
- root /apps/nginx/html;
-}
-}
-[root@www html]# echo "<h1>404 not found</h1>" > /apps/nginx/html/40x.html 
+[root@localhost html]# echo "<h1>404 not found</h1>" > /apps/nginx/html/40x.html 
 ```
 
-范例：
+**范例：**
 
 ```shell
 error_page 404 /index.html;
@@ -1194,7 +1253,7 @@ level: debug, info, notice, warn, error, crit, alert, emerg
 范例：
 
 ```shell
-[root@www static3]# vim /apps/nginx/conf/nginx.conf
+[root@localhost static3]# vim /apps/nginx/conf/nginx.conf
 server{
 ...
 error_page 500 502 503 504 404 /error.html;
@@ -1208,7 +1267,7 @@ location = /error.html {
 ### 长连接配置
 
 ```shell
-[root@www html]# vim /apps/nginx/conf/nginx.conf
+[root@localhost html]# vim /apps/nginx/conf/nginx.conf
 
 keepalive_timeout timeout [header_timeout];
 # 设定保持连接超时时长，0表示禁止长连接，默认为75s,通常配置在http字段作为站点全局配置
@@ -1219,7 +1278,7 @@ keepalive_requests number;
 范例：
 
 ```shell
-[root@www html]# vim /apps/nginx/conf/nginx.conf
+[root@localhost html]# vim /apps/nginx/conf/nginx.conf
 http {
 ...
 keepalive_requests 3;
@@ -1230,8 +1289,8 @@ keep-Alive:timeout=60;
 # 如果设置为keepalive_timeout 0表示关闭会话保持功能，将如下显示：
 Connection:close  # 浏览器收到的服务器返回的报文
 # 使用命令测试
-[root@www html]# telnet a.test.com 80
-Trying 192.168.175.10...
+[root@localhost html]# telnet a.test.com 80
+Trying 192.168.88.10...
 Connected to a.test.com.
 Escape character is '^]'.
 GET / HTTP/1.1
@@ -1263,24 +1322,24 @@ limit_rate rate;
 
 ```shell
 [root@localhost ~]# mkdir -p /apps/nginx/html/www/download
-[root@www ~]# cd /apps/nginx/html/www/download
-[root@www download]# touch f1
-[root@www download]# touch f2
+[root@localhost ~]# cd /apps/nginx/html/www/download
+[root@localhost download]# touch f1
+[root@localhost download]# touch f2
 [root@localhost ~]# vim /apps/nginx/conf.d/www.conf
 server {
-  listen 80;
-  server_name file.test.com;
-  location /download {
-  	autoindex on;    
-  	# 自动索引功能,开启才会展示出文件列表
-  	autoindex_exact_size off;    
-  	# 关闭详细文件大小统计，让文件大小显示MB，GB单位，默认为b
-  	autoindex_localtime on;    
-  	# on表示显示本机时间
-  	limit_rate 1024k;      
-  	# 限速，默认不限速
-  	root /apps/nginx/html/www;
-  }
+    listen 80;
+    server_name file.test.com;
+    location /download {
+        autoindex on;    
+        # 自动索引功能,开启才会展示出文件列表
+        autoindex_exact_size off;    
+        # 关闭详细文件大小统计，让文件大小显示MB，GB单位，默认为b
+        autoindex_localtime on;    
+        # on表示显示本机时间
+        limit_rate 1024k;      
+            # 限速，默认不限速
+        root /apps/nginx/html/www;
+    }
 }
 
 
@@ -1351,7 +1410,7 @@ keepalive_disable none | browser ...;
 ```shell
 limit_except method ... { ... }；  # 仅用于location
 method: GET, HEAD, POST, PUT, DELETE, MKCOL, COPY, MOVE, OPTIONS, PROPFIND, PROPPATCH, LOCK, UNLOCK, PATCH
-[root@www conf.d]# vim /apps/nginx/conf.d/www.conf
+[root@localhost conf.d]# vim /apps/nginx/conf.d/www.conf
 location /download {
     root /apps/nginx/html/www;
     autoindex on;
@@ -1362,7 +1421,7 @@ location /download {
     deny all;
 }
 }
-[root@www conf.d]# systemctl restart nginx
+[root@localhost conf.d]# systemctl restart nginx
 
 
 # 观察现象
@@ -1388,8 +1447,8 @@ aio on | off;
 ```
 
 ```shell
-[root@localhost nginx-1.18.0]# cd /usr/local/src/nginx-1.18.0 
-[root@localhost nginx-1.18.0]# ./configure --prefix=/apps/nginx \
+[root@localhost nginx-1.22.0]# cd /usr/local/src/nginx-1.22.0 
+[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
 --user=nginx \
 --group=nginx \
 --with-http_ssl_module \
@@ -1402,15 +1461,15 @@ aio on | off;
 --with-stream_ssl_module \
 --with-stream_realip_module \
 --with-file-aio
-[root@localhost nginx-1.18.0]# make -j 2 && make install
-[root@www nginx-1.18.0]# nginx -V
-nginx version: slsnginx/1.18.0
+[root@localhost nginx-1.22.0]# make -j 2 && make install
+[root@localhost nginx-1.22.0]# nginx -V
+nginx version: slsnginx/1.22.0
 built by gcc 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC)
 built with OpenSSL 1.0.2k-fips  26 Jan 2017
 TLS SNI support enabled
 configure arguments: --prefix=/apps/nginx --user=nginx --group=nginx --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_stub_status_module --with-http_gzip_static_module --with-pcre --with-stream --with-stream_ssl_module --with-stream_realip_module --with-file-aio
 #支持file-aio了
-[root@localhost nginx-1.18.0]# vim /apps/nginx/conf.d/www.conf
+[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/www.conf
 server {
   listen 80;
   server_name file.test.com;
@@ -1461,7 +1520,7 @@ open_file_cache_errors off;
 注意:状态页显示的是整个服务器的状态，而非虚拟主机的状态
 
 ```shell
-[root@www ~]# vim /apps/nginx/conf.d/www.conf
+[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
 server {
     listen 80;
     server_name status.test.com;
@@ -1474,12 +1533,16 @@ server {
     }
 }
 
-[root@www ~]# vim /etc/hosts
+[root@localhost ~]# vim /etc/hosts
 192.168.88.140 status.test.com
-[root@www ~]# curl http://status.test.com/status
+[root@localhost download]# curl http://status.test.com/status
+Active connections: 1
+server accepts handled requests
+ 1 1 1
+Reading: 0 Writing: 1 Waiting: 0
 ```
 
-![img](Nginx/FjEpRmUrjJTJxPnz.png!thumbnail)
+<img src="Nginx/FjEpRmUrjJTJxPnz.png!thumbnail" alt="img" style="zoom:150%;" />
 
 - Active connections: 2 表示Nginx正在处理的活动连接数2个。
 - server 2 表示Nginx启动到现在共处理了2个连接
@@ -1496,7 +1559,7 @@ server {
 比如:开源的**echo模块：**https://github.com/openresty/echo-nginx-module
 
 ```shell
-[root@www nginx-1.18.0]# vim /apps/nginx/conf.d/echo.conf
+[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/echo.conf
 server {
     listen 80;
     server_name echo.test.com;
@@ -1527,10 +1590,10 @@ server {
 # 重新编译nginx，以前的配置文件不会丢失
 [root@localhost ~]# cd /usr/local/src
 [root@localhost src]# wget https://github.com/openresty/echo-nginx-module/archive/refs/heads/master.zip
-[root@www src]# unzip master.zip
-[root@www src]# mv echo-nginx-module-master echo-nginx-module
-[root@localhost src]# cd nginx-1.18.0
-[root@localhost nginx-1.18.0]# ./configure --prefix=/apps/nginx \
+[root@localhost src]# unzip echo-nginx-module-master.zip
+[root@localhost src]# mv echo-nginx-module-master echo-nginx-module
+[root@localhost src]# cd nginx-1.22.0
+[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
 --user=nginx \
 --group=nginx \
 --with-http_ssl_module \
@@ -1543,12 +1606,12 @@ server {
 --with-stream_ssl_module \
 --with-stream_realip_module \
 --add-module=/usr/local/src/echo-nginx-module
-[root@localhost nginx-1.18.0]# make -j 2 && make install
+[root@localhost nginx-1.22.0]# make -j 2 && make install
 
 
 # 进行访问测试
-[root@www ~]# echo "192.168.88.140 echo.test.com" >> /etc/hosts
-[root@www ~]# curl echo.test.com/main
+[root@localhost ~]# echo "192.168.88.10 echo.test.com" >> /etc/hosts
+[root@localhost ~]# curl echo.test.com/main
 hello world,main-->
 192.168.88.140
 hello
@@ -1632,7 +1695,7 @@ set $name zs;
 echo $name;
 set $my_port $server_port;
 echo $my_port;
-echo "$setver_name:$server_port";
+echo "$server_name:$server_port";
 ```
 
 ## Nginx自定义访问日志
@@ -1658,7 +1721,7 @@ Context:	http, server, location, if in location, limit_except
 如果是要保留日志的源格式，只是添加相应的日志内容，则配置如下:
 
 ```shell
-[root@www ~]# vim /apps/nginx/conf/nginx.conf
+[root@localhost ~]# vim /apps/nginx/conf/nginx.conf
 log_format  nginx_format1  '$remote_addr - $remote_user [$time_local] "$request" '
                   '$status $body_bytes_sent "$http_referer" '
                   '"$http_user_agent" "$http_x_forwarded_for"'
@@ -1723,7 +1786,7 @@ gzip_vary on | off
 1. 编写配置文件，创建两个虚拟机主机：site1和site2，其中site1开启gzip压缩，site2不开启
 
 ```bash
-[root@www site1]# vim /apps/nginx/conf.d/test.conf
+[root@localhost site1]# vim /apps/nginx/conf.d/test.conf
 server {
         listen 80;
         server_name www.site1.com;
@@ -1746,18 +1809,23 @@ server {
 
 
 # 创建网站目录和文件
-[root@localhost ~]# mkdir -p /data/{site1,site2}
+[root@localhost ~]# mkdir -p /apps/nginx/html/{site1,site2}
 [root@localhost ~]# yum install -y tree
-[root@localhost ~]# tree /etc/ > /data/site1/site1.html
-[root@localhost ~]# tree /etc/ > /data/site2/site2.html
+[root@localhost ~]# tree /etc/ > /apps/nginx/html/site1/site1.html
+[root@localhost ~]# tree /etc/ > /apps/nginx/html/site2/site2.html
+
+# 更改hosts文件
+[root@localhost ~]# vim /etc/hosts
+192.168.88.10 www.site1.com
+192.168.88.10 www.site2.com
 ```
 
 2. 通过curl --compressed访问测试
 
 ```bash
-[root@www site1]# curl -I --compressed http://www.site1.com/site1.html
+[root@localhost site1]# curl -I --compressed http://www.site1.com/site1.html
 HTTP/1.1 200 OK
-Server: nginx/1.20.0
+Server: nginx/1.22.0
 Date: Thu, 18 Jul 2024 08:40:04 GMT
 Content-Type: text/html
 Last-Modified: Thu, 18 Jul 2024 08:38:22 GMT
@@ -1766,9 +1834,9 @@ Vary: Accept-Encoding
 ETag: W/"6698d47e-1ee6a"
 Content-Encoding: gzip
 
-[root@www site1]# curl -I --compressed http://www.site2.com/site2.html
+[root@localhost site1]# curl -I --compressed http://www.site2.com/site2.html
 HTTP/1.1 200 OK
-Server: nginx/1.20.0
+Server: nginx/1.22.0
 Date: Thu, 18 Jul 2024 08:40:45 GMT
 Content-Type: text/html
 Content-Length: 126570
@@ -1823,54 +1891,58 @@ ssl_session_timeout time;
 - 生成ca证书
 
 ```shell
-cd /apps/nginx
-mkdir certs && cd certs
-openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 -out ca.crt
+[root@localhost ~]# cd /apps/nginx
+[root@localhost nginx]# mkdir certs && cd certs
+[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 -out ca.crt
 ```
 
 - 生成证书请求文件
 
 ```shell
-openssl req -newkey rsa:4096 -nodes -sha256 -keyout iproute.cn.key -out iproute.cn.csr
+[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout iproute.cn.key -out iproute.cn.csr
 ```
 
 - 签发证书
 
 ```shell
-openssl x509 -req -days 36500 -in iproute.cn.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out iproute.cn.crt
-cat iproute.cn.crt ca.crt > iproute.crt
+[root@localhost certs]# openssl x509 -req -days 36500 -in iproute.cn.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out iproute.cn.crt
+[root@localhost certs]# cat iproute.cn.crt ca.crt > iproute.crt
 ```
 
 - 验证证书内容
 
 ```shell
-openssl x509 -in iproute.cn.crt -noout -text
+[root@localhost certs]# openssl x509 -in iproute.cn.crt -noout -text
 ```
 
 ### Nginx证书配置
 
 ```shell
-vim /apps/nginx/conf/nginx.conf
+[root@localhost certs]# vim /apps/nginx/conf.d/ssl.conf
 server {
-  listen 80;
-  listen 443 ssl;
-  ssl_certificate /apps/nginx/certs/iproute.crt;
-  ssl_certificate_key /apps/nginx/certs/iproute.cn.key;
-  ssl_session_cache shared:sslcache:20m;
-  ssl_session_timeout 10m;
-  root /apps/nginx/html;
+        listen 80;
+        listen 443 ssl;
+        ssl_certificate /apps/nginx/certs/iproute.crt;
+        ssl_certificate_key /apps/nginx/certs/iproute.cn.key;
+        ssl_session_cache shared:sslcache:20m;
+        ssl_session_timeout 10m;
+        root /apps/nginx/html;
 }
 ```
+
+#### windows验证
+
+<img src="Nginx/image-20250207181434088.png" alt="image-20250207181434088" style="zoom:80%;" />
 
 ## 虚拟主机
 
 ```shell
-[root@www conf.d]# ll /apps/nginx/conf.d
+[root@localhost conf.d]# ll /apps/nginx/conf.d
 总用量 12
 -rw-r--r--. 1 root root 107 9月  25 16:45 bbs.conf
 -rw-r--r--. 1 root root 109 9月  25 16:45 blog.conf
 -rw-r--r--. 1 root root 107 9月  25 16:44 www.conf
-[root@www conf.d]# cat *.conf
+[root@localhost conf.d]# cat *.conf
 server {
 listen      *:8080;
 server_name bbs.eagle.com;
@@ -1903,11 +1975,11 @@ index index.html;
 
 ## 什么是LNMP
 
-LNMP是一套技术的组合，L=Linux、N=Nginx、M~=MySQL、P=PHP
+LNMP是一套技术的组合，L=Linux、N=Nginx、M=MySQL、P=PHP
 
 ## LNMP架构是如何工作的
 
-- 首先nginx服务是不能请求动态请求，那么当用户发起动态请求时，nginx无法处理
+- 首先nginx服务是不能处理动态请求，那么当用户发起动态请求时，nginx无法处理
 - 当用户发起http请求，请求会被nginx处理，如果是静态资源请求nginx则直接返回，如果是动态请求nginx则通过fastcgi协议转交给后端的PHP程序处理
 
 ![image-20210711094454191](Nginx/image-20210711094454191.png)
@@ -1929,104 +2001,89 @@ LNMP是一套技术的组合，L=Linux、N=Nginx、M~=MySQL、P=PHP
 
 ## 安装nginx
 
-在Centos7默认的软件仓库中默认是没有nginx的，我们需要安装一个扩展软件仓库`epel-release`才可以安装
+参考课件开始部分中的编译安装，当然也可以通过yum安装，但是yum安装的时候需要注意配置文件的路径
 
-```bash
-# 安装扩展软件源
-yum -y install epel-release
-
-# 安装nginx
-yum -y install nginx
-
-# 启动nginx并且设置为开机自启动
-systemctl start nginx
-systemctl enable nginx
-
-# 检查nginx是否成功安装
-nginx -v
-```
-
-### 修改nginx用户
-
-为了安全和方便后面的php进程的权限管理，这边建议将nginx的用户改为www用户
-
-```bash
-# 创建www用户组
-groupadd www -g 666
-
-# 添加www用户
-useradd www -u 666 -g 666 -s /sbin/nologin -M
-
-# 修改配置切换nginx运行用户为www
-sed -i '/^user/c user www;' /etc/nginx/nginx.conf
-
-# 重启nginx服务
-systemctl restart nginx
-
-# 检查nginx运行的用户
-ps aux |grep nginx
-```
+自行完成nginx的编译安装...
 
 ## 安装php
 
-Centos7软件仓库中默认自带的php版本很老，并不能支持运行比较新的网站，所以我们需要添加一个php官方的软件仓库，才可以正确安装。
+1. 安装php8.0全家桶
 
 ```bash
-# 安装webtstic软件仓库，官方仓库的链接附上，但是并不推荐，因为国外的资源比较卡
-# rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm
+[root@localhost ~]# yum install -y epel-release
 
-# 导入英格提供的php源，这个比较快
-vim /etc/yum.repos.d/eagle.repo
-[eagle]
-name=Eagle's lab
-baseurl=http://file.eagleslab.com:8889/%E8%AF%BE%E7%A8%8B%E7%9B%B8%E5%85%B3%E8%BD%AF%E4%BB%B6/%E4%BA%91%E8%AE%A1%E7%AE%97%E8%AF%BE%E7%A8%8B/Centos7%E6%BA%90/
-gpgcheck=0
-enabled=1
-
-# 安装php环境，php所需的组件比较多，我们可以一次性安装全面了
-yum -y install php71w php71w-cli php71w-common php71w-devel php71w-embedded php71w-gd php71w-mcrypt php71w-mbstring php71w-pdo php71w-xml php71w-fpm php71w-mysqlnd php71w-opcache php71w-pecl-memcached php71w-pecl-redis php71w-pecl-mongodb
+# 安装php仓库
+[root@localhost ~]# yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm --skip-broken
+[root@localhost ~]# yum install -y php php-cli php-curl php-mysqlnd php-gd php-opcache php-zip php-intl
 ```
 
-### 切换php用户
-
-配置php-fpm用于与nginx的运行用户保持一致
+2. 更改php配置文件，启动监控9000端口
 
 ```bash
-sed -i '/^user/c user = www' /etc/php-fpm.d/www.conf
-sed -i '/^group/c group = www' /etc/php-fpm.d/www.conf
+[root@localhost ~]# vim /etc/php-fpm.d/www.conf
+......
+;listen = /run/php-fpm/www.sock
+listen = 9000
+......
 ```
 
-### 启动php-fpm
-
-启动并且加入开机自启动
+3. 更改php-fpm用户，与nginx保持一致
 
 ```bash
-systemctl start php-fpm
-systemctl enable php-fpm
+[root@localhost ~]# sed -i '/^user/c user = nginx' /etc/php-fpm.d/www.conf
+[root@localhost ~]# sed -i '/^group/c group = nginx' /etc/php-fpm.d/www.conf
+```
+
+4. 启动php-fpm管理器
+
+```bash
+[root@localhost ~]# systemctl enable --now php-fpm
+[root@localhost ~]# systemctl status php-fpm
+● php-fpm.service - The PHP FastCGI Process Manager
+     Loaded: loaded (/usr/lib/systemd/system/php-fpm.service; enabled; pr>
+     Active: active (running) since Fri 2025-02-07 19:26:10 CST; 10s ago
+   Main PID: 34396 (php-fpm)
+     Status: "Processes active: 0, idle: 5, Requests: 0, slow: 0, Traffic>
+      Tasks: 6 (limit: 10888)
+     Memory: 29.1M
+        CPU: 60ms
+     CGroup: /system.slice/php-fpm.service
+             ├─34396 "php-fpm: master process (/etc/php-fpm.conf)"
+             ├─34397 "php-fpm: pool www"
+             ├─34398 "php-fpm: pool www"
+             ├─34399 "php-fpm: pool www"
+             ├─34400 "php-fpm: pool www"
+             └─34401 "php-fpm: pool www"
+
+# 检查9000端口号是否监听
+[root@localhost ~]# ss -nlt
+State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port  Process
+LISTEN  0       128            0.0.0.0:22          0.0.0.0:*
+LISTEN  0       511            0.0.0.0:80          0.0.0.0:*
+LISTEN  0       511                  *:9000              *:*
+LISTEN  0       128               [::]:22             [::]:*
 ```
 
 ## 安装Mariadb数据库
 
 ```bash
 # 安装mariadb数据库软件
-yum install mariadb-server mariadb -y
+[root@localhost ~]# yum install -y mariadb-server mariadb
 
 # 启动数据库并且设置开机自启动
-systemctl start mariadb
-systemctl enable mariadb
+[root@localhost ~]# systemctl enable --now mariadb
 
 # 设置mariadb的密码
-mysqladmin password '123456'
+[root@localhost ~]# mysqladmin password '123456'
 
 # 验证数据库是否工作正常
-mysql -uroot -p123456 -e "show databases;"
+[root@localhost ~]# mysql -uroot -p123456 -e "show databases;"
 +--------------------+
 | Database           |
 +--------------------+
 | information_schema |
 | mysql              |
 | performance_schema |
-| test               |
 +--------------------+
 ```
 
@@ -2076,10 +2133,10 @@ fastcgi_param SCRIPT_FILENAME /code$fastcgi_script_name;
 
 ```bash
 # 首先为php探针创建一个虚拟主机
-vim /etc/nginx/conf.d/php.conf
+[root@localhost ~]# vim /apps/nginx/conf.d/php.conf
 server {
         listen 80;
-        server_name php.iproute.cn;
+        server_name php.iproot.cn;
         root /code;
 
         location / {
@@ -2094,33 +2151,34 @@ server {
 }
 
 # 测试nginx配置是否正确
-nginx -t
+[root@localhost ~]# nginx -t
 
 # 重启nginx服务
-systemctl restart nginx
+[root@localhost ~]# systemctl restart nginx
 ```
 
 编写php文件，在php文件中编写如下代码
 
 ```php
-vim /code/info.php
+[root@localhost ~]# mkdir /code
+[root@localhost ~]# vim /code/info.php
 <?php
     phpinfo();
 ?>
 ```
 
-在浏览器中访问，可以得到如下的结果
+在浏览器中访问`php.iproot.cn`记得更改windows的hosts文件，可以得到如下的结果：
 
 ![image-20211106103800569](Nginx/image-20211106103800569.png)
 
-![image-20211106103719929](Nginx/image-20211106103719929.png)
+<img src="Nginx/image-20250207194233281.png" alt="image-20250207194233281" style="zoom:80%;" />
 
 ## 测试数据库连接
 
 为了确保php能正确访问数据库，我们可以编写如下php代码用于验证数据库是否正确连接
 
 ```php
-vim /code/mysqli.php
+[root@localhost ~]# vim /code/mysql.php
 <?php
     $servername = "localhost";
     $username = "root";
@@ -2137,9 +2195,9 @@ vim /code/mysqli.php
 ?>
 ```
 
-使用浏览器访问，可以得到数据库连接的结果
+使用浏览器访问，可以得到数据库连接的结果:
 
-![image-20211106103934675](Nginx/image-20211106103934675.png)
+<img src="Nginx/image-20250207194355266.png" alt="image-20250207194355266" style="zoom:80%;" />
 
 ## 安装phpmyadmin
 
@@ -2147,10 +2205,10 @@ vim /code/mysqli.php
 
 ```bash
 # 为数据库管理工具创建虚拟主机
-vim /etc/nginx/conf.d/mysql.conf
+[root@localhost ~]# vim /apps/nginx/conf.d/mysql.conf
 server {
         listen 80;
-        server_name mysql.iproute.cn;
+        server_name mysql.iproot.cn;
         root /code/phpmyadmin;
 
         location / {
@@ -2165,27 +2223,29 @@ server {
 }
 
 # 检查nginx配置文件，并且重启
-nginx -t
-systemctl restart nginx
+[root@localhost ~]# nginx -t
+[root@localhost ~]# systemctl restart nginx
+
 
 # 下载phpmyadmin源码
-wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
+[root@localhost ~]# cd /code/
+[root@localhost code]# wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
 
 # 解压软件包，并且重命名
-unzip phpMyAdmin-5.1.1-all-languages.zip
-mv phpMyAdmin-5.1.1-all-languages phpmyadmin
+[root@localhost phpmyadmin]# unzip phpMyAdmin-5.1.1-all-languages.zip
+[root@localhost phpmyadmin]# mv phpMyAdmin-5.1.1-all-languages phpmyadmin
 
 # 添加session文件夹权限
-chown www.www /var/lib/php/session
+[root@localhost phpmyadmin]# chown nginx.nginx /var/lib/php/session
 ```
 
-下面浏览器访问phpmyadmin页面
+下面浏览器访问phpmyadmin页面，同样记得更改windows下的hosts文件
 
-![image-20211106105820443](Nginx/image-20211106105820443.png)
+<img src="Nginx/image-20250207195412139.png" alt="image-20250207195412139" style="zoom:80%;" />
 
 输入数据库用户名`root`和密码`123456`就可以进入图形化数据库管理页面了
 
-![image-20211106105857522](Nginx/image-20211106105857522.png)
+<img src="Nginx/image-20250207195442656.png" alt="image-20250207195442656" style="zoom:80%;" />
 
 # 安装博客系统
 
@@ -2193,10 +2253,10 @@ chown www.www /var/lib/php/session
 
 ```bash
 # 为博客创建虚拟主机
-vim /etc/nginx/conf.d/typecho.conf
+[root@localhost ~]# vim /apps/nginx/conf.d/typecho.conf
 server {
         listen 80;
-        server_name blog.iproute.cn;
+        server_name blog.iproot.cn;
         root /code/typecho;
         index index.php index.html;
 
@@ -2209,50 +2269,54 @@ server {
         }
 }
 
-# 检查nginx配置，并且重启nginx
-nginx -t
-systemctl restart nginx
+# 检查nginx配置文件，并且重启
+[root@localhost ~]# nginx -t
+[root@localhost ~]# systemctl restart nginx
 
-# 下载源代码然后解压重命名
-mkdir code/typecho
-cd /code/typecho
-wget http://file.eagleslab.com:8889/%E8%AF%BE%E7%A8%8B%E7%9B%B8%E5%85%B3%E8%BD%AF%E4%BB%B6/%E4%BA%91%E8%AE%A1%E7%AE%97%E8%AF%BE%E7%A8%8B/%E8%AF%BE%E7%A8%8B%E7%9B%B8%E5%85%B3%E6%96%87%E4%BB%B6/typecho.zip
+# 创建typecho目录
+[root@localhost ~]# mkdir /code/typecho
+[root@localhost ~]# cd /code/typecho
 
-unzip typecho.zip
+[root@localhost ~]# wget https://github.com/typecho/typecho/releases/latest/download/typecho.zip
+
+# 解压源码
+[root@localhost ~]# unzip typecho.zip
 ```
 
 ## 创建数据库
 
-点击数据库
+点击数据库，输入数据库名之后，就可以点击创建
 
-![image-20211106110745264](Nginx/image-20211106110745264.png)
-
-输入数据库名之后，就可以点击创建
-
-![image-20211106110832539](Nginx/image-20211106110832539.png)
+<img src="Nginx/image-20250207195822737.png" alt="image-20250207195822737" style="zoom:80%;" />
 
 ## 安装博客系统
 
 下面就可以开始进入网站安装的部分了，访问博客系统页面
 
-![image-20211106110937420](Nginx/image-20211106110937420.png)
+<img src="Nginx/image-20250207195859686.png" alt="image-20250207195859686" style="zoom:80%;" />
 
-填写数据库密码和网站后台管理员密码
+赋予网站根目录下usr/uploads目录权限
 
-![image-20211106111051847](Nginx/image-20211106111051847.png)
+```bash
+[root@localhost typecho]# chmod a+w usr/uploads/
+```
 
-点击开始安装之后，会出现了如下页面，这个是因为php的用户是www用户，而/code/typecho文件夹是root用户的，所以这个网站根本没有权限保存数据相关的配置到文件夹中
+继续下一步，填写数据库密码和网站后台管理员密码
 
-![image-20211106111537070](Nginx/image-20211106111537070.png)
+<img src="Nginx/image-20250207200047813.png" alt="image-20250207200047813" style="zoom:80%;" />
 
-方法一：直接将typecho文件夹赋予www权限
+点击开始安装之后，会出现了如下页面，这个是因为php的用户是nginx用户，而/code/typecho文件夹是root用户的，所以这个网站根本没有权限保存数据相关的配置到文件夹中
+
+<img src="Nginx/image-20250207200142034.png" alt="image-20250207200142034" style="zoom:80%;" />
+
+方法一：直接将typecho文件夹赋予nginx权限
 
 方法二：手动去帮助网站创建网站没有权限的配置文件，下面将会演示方法二
 
 直接在/code/typecho下创建`config.inc.php`文件，然后将网页提示内容写入这个文件中
 
 ```bash
-vim /code/typecho/config.inc.php
+[root@localhost typecho]# vim /code/typecho/config.inc.php
 复制网页上的内容进去
 ```
 
@@ -2260,65 +2324,66 @@ vim /code/typecho/config.inc.php
 
 下面是安装成功的页面
 
-![image-20211106111631222](Nginx/image-20211106111631222.png)
+<img src="Nginx/image-20250207200242332.png" alt="image-20250207200242332" style="zoom:80%;" />
+
+<img src="Nginx/image-20250207200300668.png" alt="image-20250207200300668" style="zoom:80%;" />
 
 ## 切换主题
 
 默认的主题如下，界面比较的简洁，我们可以给这个网站替换主题，也可以借此加深熟悉我们对Linux命令行的熟练程度
 
-![image-20211106112000231](Nginx/image-20211106112000231.png)
-
-打开官方主题站：https://typecho.me/
+<img src="Nginx/image-20250118221202018.png" alt="image-20250118221202018" style="zoom:80%;" />
 
 第三方主题商店：https://www.typechx.com/
 
-这边以这个主题为例
+我们尝试更换这个主题
 
-![image-20211106112120529](Nginx/image-20211106112120529.png)
+<img src="Nginx/image-20250118221344667.png" alt="image-20250118221344667" style="zoom:80%;" />
 
-点击模板下载
+选择模板下载
 
-![image-20211106112150188](Nginx/image-20211106112150188.png)
+<img src="Nginx/image-20250118221414487.png" alt="image-20250118221414487" style="zoom:80%;" />
 
-点击下载压缩包
+然后在打开的github仓库中下载ZIP压缩包
 
-![image-20211106112228058](Nginx/image-20211106112228058.png)
+<img src="Nginx/image-20250118221502963.png" alt="image-20250118221502963" style="zoom:80%;" />
 
-将主题上传到博客主题的目录`/code/typecho/usr/themes`
+将下载好的主题压缩包上传到博客主题的目录`/code/typecho/usr/themes`
 
-![image-20211106112349552](Nginx/image-20211106112349552.png)
+<img src="Nginx/image-20250118221634385.png" alt="image-20250118221634385" style="zoom:80%;" />
+
+然后解压主题包，并且将名称改为简单一点的
 
 ```bash
-# 解压压缩包，并且将主题文件夹重命名
-unzip typecho-theme-sagiri-master.zip
-mv typecho-theme-sagiri-master sagiri
-
-# 可以删除旧的压缩包文件
-rm -rf typecho-theme-sagiri-master.zip
+[root@localhost themes]# unzip Typecho-Butterfly-main.zip
+[root@localhost themes]# ls
+Typecho-Butterfly-main  Typecho-Butterfly-main.zip  default
+[root@localhost themes]# mv Typecho-Butterfly-main butterfly
+[root@localhost themes]# rm -rf Typecho-Butterfly-main.zip
 ```
 
-进入网站后台切换主题，在地址后面加上`/admin`就可以进入后台登录页面了
+然后登录到博客后台，在设置里更换主题
 
-![image-20211106112629934](Nginx/image-20211106112629934.png)
+<img src="Nginx/image-20250118221843976.png" alt="image-20250118221843976" style="zoom:80%;" />
 
-启用我们刚刚安装的主题
+然后回到博客首页刷新一下，就可以看到新的主题已经应用了~
 
-![image-20211106113531819](Nginx/image-20211106113531819.png)
+![image-20250118221920089](Nginx/image-20250118221920089.png)
 
-访问网页前端，查看最终的效果
+会有一些图片资源的丢失，稍微了解一点前端知识，就可以将其完善好了。不懂前端的同学，可以去找一些简单一点的主题。
 
-![image-20211106113600091](Nginx/image-20211106113600091.png)
+<img src="Nginx/image-20250118221958932.png" alt="image-20250118221958932" style="zoom:80%;" />
 
 # 安装网盘
 
 ## 部署虚拟主机
 
 ```bash
-# 为博客创建虚拟主机
-vim /etc/nginx/conf.d/kod.conf
+# 为网盘创建虚拟主机
+[root@localhost themes]# vim /apps/nginx/conf.d/kod.conf
 server {
         listen 80;
-        server_name pan.iproute.cn;
+        server_name kod.iproot.cn;
         root /code/kod;
         index index.php index.html;
 
@@ -2331,57 +2396,55 @@ server {
         }
 }
 
-# 检查nginx配置，并且重启nginx
-nginx -t
-systemctl restart nginx
+# 检查nginx配置文件，并且重启
+[root@localhost ~]# nginx -t
+[root@localhost ~]# systemctl restart nginx
 
 # 下载源代码然后解压重命名
-mkdir /code/kod
-cd /code/kod
-wget https://static.kodcloud.com/update/download/kodbox.1.23.zip
-unzip kodbox.1.23.zip
+[root@localhost ~]# mkdir /code/kod
+[root@localhost ~]# cd /code/kod
+[root@localhost kod]# wget https://static.kodcloud.com/update/download/kodbox.1.23.zip
+
+# 解压源码
+[root@localhost kod]# unzip kodbox.1.23.zip
 ```
 
 ## 创建数据库
 
-点击数据库
-
-![image-20211106113754499](Nginx/image-20211106113754499.png)
-
-输入数据库名之后，就可以点击创建
-
-![image-20211106113831469](Nginx/image-20211106113831469.png)
+<img src="Nginx/image-20250207200725398.png" alt="image-20250207200725398" style="zoom:80%;" />
 
 ## 安装网盘系统
 
 浏览器访问此站点，我们发现目录权限，这个比较重要
 
-![image-20211106114331235](Nginx/image-20211106114331235.png)
+<img src="Nginx/image-20250207201018894.png" alt="image-20250207201018894" style="zoom:80%;" />
 
 ```bash
 # 设置权限
-chown -R www.www /code/kod
+[root@localhost kod]# chown -R nginx.nginx /code/kod
 ```
 
 添加完成之后，刷新页面，可以看到所有条件都已经符合，就可以直接点击下一步了
 
-![image-20211106114439749](Nginx/image-20211106114439749.png)
+<img src="Nginx/image-20250207201110920.png" alt="image-20250207201110920" style="zoom:80%;" />
 
 填写数据库密码和数据库名
 
-![image-20211106114708105](Nginx/image-20211106114708105.png)
+<img src="Nginx/image-20250207201132377.png" alt="image-20250207201132377" style="zoom:80%;" />
 
 设置系统密码
 
-![image-20211106114733008](Nginx/image-20211106114733008.png)
+<img src="Nginx/image-20250207201248174.png" alt="image-20250207201248174" style="zoom:80%;" />
 
 完成网站安装
 
 ![image-20211106114747284](Nginx/image-20211106114747284.png)
 
+<img src="Nginx/image-20250207201334236.png" alt="image-20250207201334236" style="zoom:80%;" />
+
 下面根据自己的喜好，进行简单的设置就可以正常使用啦！
 
-![image-20211106114834351](Nginx/image-20211106114834351.png)
+<img src="Nginx/image-20250207201405074.png" alt="image-20250207201405074" style="zoom:80%;" />
 
 我们也可以直接在这个上面编辑Linux上的文件，比如我们之前创建的php文件
 
