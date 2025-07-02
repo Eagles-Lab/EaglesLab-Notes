@@ -995,7 +995,7 @@ c_no in (select c_no from course where c_name='计算机导论');
 
 # 连接查询
 
-![img](DQL%E6%9F%A5%E8%AF%A2%E7%BB%83%E4%B9%A0/1609470584022-91803f76-29a3-4d82-9dbb-e3f33e60aa14.png)
+![img](DQL查询练习/sql_joins.png)
 
 左外连接
 
@@ -1168,5 +1168,3 @@ select * from person left join card on person.cardId=card.id union select * from
 3. 对于每个 `card` 记录,查找 `person` 表中 `cardId` 字段与 `card.id` 相匹配的记录
 4. 将匹配的 `person` 和 `card` 记录组合成一条结果记录返回
 5. 对于无法匹配的记录,用 `NULL` 填充相应的字段
-
-# 

@@ -70,8 +70,8 @@
   - [08.Nginx反向代理](Linux服务/Nginx反向代理.md)
   - [09.负载均衡](Linux服务/负载均衡.md)
 
-- [数据库](数据库/MySQL数据库.md)
-  - [01.MySQL](数据库/MySQL数据库.md)
+- [数据库](数据库/MySQL.md)
+  - [01.MySQL](数据库/MySQL.md)
   - [02.MongoDB](数据库/MongoDB.md)
   - [03.Redis](数据库/Redis.md)
   - [04.Mamcached](数据库/Memcached.md)
@@ -97,7 +97,7 @@
 
 - [Kubernetes](Kubernetes/Kubernetes.md)
   - [01.Kubernetes概述](Kubernetes/Kubernetes概述.md)
-  - [02.安装手册](Kubernetes/安装手册.md)
+  - [02.安装手册](Kubernetes/手动安装手册.md)
   - [03.Pod与网络](Kubernetes/Pod与网络.md)
   - [04.资源清单](Kubernetes/资源清单.md)
   - [05.Pod生命周期](Kubernetes/Pod生命周期.md)
