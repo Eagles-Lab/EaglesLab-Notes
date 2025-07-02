@@ -74,11 +74,11 @@ ca.crt:     1025 bytes
 
 在登录页面上输入上面的token
 
-![image-20200520144548997](11.DashBoard/image-20200520144548997.png)
+![image-20200520144548997](DashBoard/image-20200520144548997.png)
 
 出现下面的页面代表成功
 
-![image-20200520144959353](11.DashBoard/image-20200520144959353.png)
+![image-20200520144959353](DashBoard/image-20200520144959353.png)
 
 ## 使用DashBoard
 
@@ -88,31 +88,31 @@ ca.crt:     1025 bytes
 
 选择指定的命名空间`dev`，然后点击`Deployments`，查看dev空间下的所有deployment
 
-![img](11.DashBoard/image-20200520154628679.png)
+![img](DashBoard/image-20200520154628679.png)
 
 **扩缩容**
 
 在`Deployment`上点击`规模`，然后指定`目标副本数量`，点击确定
 
-![img](11.DashBoard/image-20200520162605102.png)
+![img](DashBoard/image-20200520162605102.png)
 
 **编辑**
 
 在`Deployment`上点击`编辑`，然后修改`yaml文件`，点击确定
 
-![image-20200520163253644](11.DashBoard/image-20200520163253644.png)
+![image-20200520163253644](DashBoard/image-20200520163253644.png)
 
 **查看Pod**
 
 点击`Pods`, 查看pods列表
 
-![img](11.DashBoard/image-20200520163552110.png)
+![img](DashBoard/image-20200520163552110.png)
 
 **操作Pod**
 
 选中某个Pod，可以对其执行日志（logs）、进入执行（exec）、编辑、删除操作
 
-![img](11.DashBoard/image-20200520163832827.png)
+![img](DashBoard/image-20200520163832827.png)
 
 > Dashboard提供了kubectl的绝大部分功能，这里不再一一演示
 
@@ -128,4 +128,4 @@ https://kuboard.cn/v4/install/quickstart.html
 
 安装好后链接上集群，最终界面如下
 
-![image-20240918150900081](11.DashBoard/image-20240918150900081.png)
+![image-20240918150900081](DashBoard/image-20240918150900081.png)

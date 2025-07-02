@@ -1,6 +1,6 @@
 # pod概念
 
-<img src="02.pod与网络/image-20240904112128424.png" alt="image-20240904112128424" style="zoom:33%;" />
+<img src="pod与网络/image-20240904112128424.png" alt="image-20240904112128424" style="zoom:33%;" />
 
 首先我们要明确一个概念，Kubernetes并不是只支持Docker这一个容器运行时，Kubernetes通过CRI这个抽象层，支持除Docker之外的其他容器运行时，比如rkt甚至支持客户自定义容器运行时。
 
@@ -9,7 +9,7 @@
 
 这个问题不易回答的原因，是因为包含了这一组业务容器的逻辑单元，没有一个统一的办法来代表整个容器组的状态，这就是Kubernetes引入pod的概念，并且每个pod里都有一个Kubernetes系统自带的pause容器的原因，通过引入pause这个与业务无关并且作用类似于Linux操作系统守护进程的Kubernetes系统标准容器，以pause容器的状态来代表整个容器组的状态。
 
-<img src="02.pod与网络/image-20240904112421964.png" alt="image-20240904112421964" style="zoom: 33%;" />
+<img src="pod与网络/image-20240904112421964.png" alt="image-20240904112421964" style="zoom: 33%;" />
 
 - 第三个原因：pod里所有的业务容器共享pause容器的IP地址，以及pause容器mount的Volume，通过这种设计，业务容器之间可以直接通信，文件也能够直接彼此共享。
 
@@ -54,7 +54,7 @@ docker run --name nginx -v `pwd`/nginx.conf:/etc/nginx/nginx.conf --net=containe
 docker run -d --name ghost -e NODE_ENV=development --net=container:pause --ipc=container:pause --pid=container:pause ghost
 ```
 
-![image-20240904115715394](02.pod与网络/image-20240904115715394.png)
+![image-20240904115715394](pod与网络/image-20240904115715394.png)
 
 # kubernetes网络
 
@@ -72,7 +72,7 @@ Kubernetes的网络模型假定了所有Pod都在一个可以直接连通的扁�
 
 借助CNI标准，Kubernetes可以实现容器网络问题的解决。通过插件化的方式来集成各种网络插件，实现集群内部网络相互通信，只要实现CNI标准中定义的核心接口操作（ADD，将容器添加到网络；DEL，从网络中删除一个容器；CHECK，检查容器的网络是否符合预期等）。CNI插件通常聚焦在容器到容器的网络通信。
 
-![image-20240904134937631](02.pod与网络/image-20240904134937631.png)
+![image-20240904134937631](pod与网络/image-20240904134937631.png)
 
 CNI的接口并不是指HTTP，gRPC这种接口，CNI接口是指对可执行程序的调用（exec）可执行程序，Kubernetes节点默认的CNI插件路径为/opt/cni/bin
 
@@ -84,7 +84,7 @@ bridge     calico-ipam  dummy  flannel   host-local   ipvlan   macvlan   ptp    
 
 CNI通过JSON格式的配置文件来描述网络配置，当需要设置容器网络时，由容器运行时负责执行CNI插件，并通过CNI插件的标准输入（stdin）来传递配置文件信息，通过标准输出（stdout）接收插件的执行结果。从网络插件功能可以分为五类：
 
-![image-20240904135319098](02.pod与网络/image-20240904135319098.png)
+![image-20240904135319098](pod与网络/image-20240904135319098.png)
 
 - **Main插件**
   - 创建具体网络设备
@@ -110,11 +110,11 @@ CNI通过JSON格式的配置文件来描述网络配置，当需要设置容器�
 - **Windows插件**：专门用于Windows平台的CNI插件（win-bridge与win-overlay网络插件）
 - **第三方网络插件**：第三方开源的网络插件众多，每个组件都有各自的优点及适应的场景，难以形成统一的标准组件，常用有Flannel、Calico、Cilium、OVN网络插件
 
-![image-20240904135633230](02.pod与网络/image-20240904135633230.png)
+![image-20240904135633230](pod与网络/image-20240904135633230.png)
 
 ## 网络插件
 
-<img src="02.pod与网络/image-20240904135815763.png" alt="image-20240904135815763" style="zoom:33%;" />
+<img src="pod与网络/image-20240904135815763.png" alt="image-20240904135815763" style="zoom:33%;" />
 
 ### 人气数据
 
@@ -158,11 +158,11 @@ CNI通过JSON格式的配置文件来描述网络配置，当需要设置容器�
 
 ### overlay
 
-![image-20240904140729187](02.pod与网络/image-20240904140729187.png)
+![image-20240904140729187](pod与网络/image-20240904140729187.png)
 
 ### underlay
 
-![image-20240904140805520](02.pod与网络/image-20240904140805520.png)
+![image-20240904140805520](pod与网络/image-20240904140805520.png)
 
 ## calico
 
@@ -172,7 +172,7 @@ Calico是一个纯三层的虚拟网络，它没有复用docker的docker0网桥�
 
 ### calico架构
 
-<img src="02.pod与网络/image-20240904141203196.png" alt="image-20240904141203196" style="zoom:50%;" />
+<img src="pod与网络/image-20240904141203196.png" alt="image-20240904141203196" style="zoom:50%;" />
 
 - Felix
   - 管理网络接口
@@ -190,7 +190,7 @@ Calico是一个纯三层的虚拟网络，它没有复用docker的docker0网桥�
 - 基于三层的”二层“通信，层即vxlan包封装在udp数据包中，要求udp在k8s节点间三层可达；
 - 二层即vxlan封包的源mac地址和目的mac地址是自己的vxlan设备mac和对端vxlan设备mac实现通讯。
 
-![image-20240904143234102](02.pod与网络/image-20240904143234102.png)
+![image-20240904143234102](pod与网络/image-202409041432341png)
 
 - 数据包封包：封包，在vxlan设备上将pod发来的数据包源、目的mac替换为本机vxlan网卡和对端节点vxlan 网卡的mac。外层udp目的ip地址根据路由和对端vxlan的mac查fdb表获取
 
@@ -198,7 +198,7 @@ Calico是一个纯三层的虚拟网络，它没有复用docker的docker0网桥�
 
 - 缺点：需要进行vxlan的数据包封包和解包会存在一定的性能损耗
 
-![image](02.pod与网络/image.png)
+![image](pod与网络/image.png)
 
 配置方法
 
@@ -228,24 +228,24 @@ calico_backend: "vxlan"
 
 查看验证
 
-<img src="02.pod与网络/image-20240904150012585.png" alt="image-20240904150012585" style="zoom: 80%;" />
+<img src="pod与网络/image-20240904150012585.png" alt="image-20240904150012585" style="zoom: 80%;" />
 
 VXLAN不需要BGP来建立节点间的邻接关系
 
-<img src="02.pod与网络/image-20240904150019409.png" alt="image-20240904150019409" style="zoom: 80%;" />
+<img src="pod与网络/image-20240904150019409.png" alt="image-20240904150019409" style="zoom: 80%;" />
 
 ### IPIP
 
 - Linux原生内核支持
 - IPIP隧道的工作原理是将源主机的IP数据包封装在一个新的IP数据包中，新的IP数据包的目的地址是隧道的另一端。在隧道的另一端，接收方将解封装原始IP数据包，并将其传递到目标主机。IPIP隧道可以在不同的网络之间建立连接，例如在IPv4网络和IPv6网络之间建立连接。
 
-<img src="02.pod与网络/image-20240904145716982.png" alt="image-20240904145716982" style="zoom:33%;" />
+<img src="pod与网络/image-20240904145716982.png" alt="image-20240904145716982" style="zoom:33%;" />
 
 - 数据包封包：封包，在tunl0设备上将pod发来的数据包的mac层去掉，留下ip层封包。外层数据包目的ip地址根据路由得到。
 - 优点：只要k8s节点间三层互通，可以跨网段，对主机网关路由没有特殊要求。
 - 缺点：需要进行IPIP的数据包封包和解包会存在一定的性能损耗
 
-![image-20240904145738269](02.pod与网络/image-20240904145738269.png)
+![image-20240904145738269](pod与网络/image-20240904145738269.png)
 
 配置方法
 
@@ -267,17 +267,17 @@ value: "Never"
 
 查看验证
 
-<img src="02.pod与网络/image-20240904150123553.png" alt="image-20240904150123553" style="zoom:80%;" />
+<img src="pod与网络/image-20240904150123553.png" alt="image-20240904150123553" style="zoom:80%;" />
 
 IPIP模式需要BGP来建立节点间的邻接关系，VXLAN不需要
 
-<img src="02.pod与网络/image-20240904150127316.png" alt="image-20240904150127316" style="zoom:80%;" />
+<img src="pod与网络/image-20240904150127316.png" alt="image-20240904150127316" style="zoom:80%;" />
 
 ### BGP
 
 边界网关协议（Border Gateway Protocol,BGP）是互联网上一个核心的去中心化自治路由协议。它通过维护IP路由表或‘前缀’表来实现自治系统（AS）之间的可达性，属于矢量路由协议。BGP不使用传统的内部网关协议（IGP）的指标，而使用基于路径、网络策略或规则集来决定路由。因此，它更适合被称为矢量性协议，而不是路由协议。BGP，通俗的讲就是讲接入到机房的多条线路（如电信、联通、移动等）融合为一体，实现多线单IP，BGP机房的优点：服务器只需要设置一个IP地址，最佳访问路由是由网络上的骨⼲路由器根据路由跳数与其它技术指标来确定的，不会占用服务器的任何系统。
 
-![image-20240904151200463](02.pod与网络/image-20240904151200463.png)
+![image-20240904151200463](pod与网络/image-20240904151200463.png)
 
 - 数据包封包：不需要进行数据包封包
 - 优点：不用封包解包，通过BGP协议可实现pod网络在主机间的三层可达
@@ -303,8 +303,8 @@ value: "Never"
 
 查看验证
 
-<img src="02.pod与网络/image-20240904151418487.png" alt="image-20240904151418487" style="zoom:80%;" />
+<img src="pod与网络/image-20240904151418487.png" alt="image-20240904151418487" style="zoom:80%;" />
 
-<img src="02.pod与网络/image-20240904151425020.png" alt="image-20240904151425020" style="zoom:80%;" />
+<img src="pod与网络/image-20240904151425020.png" alt="image-20240904151425020" style="zoom:80%;" />
 
-<img src="02.pod与网络/image-20240904151434684.png" alt="image-20240904151434684" style="zoom:80%;" />
+<img src="pod与网络/image-20240904151434684.png" alt="image-20240904151434684" style="zoom:80%;" />

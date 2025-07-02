@@ -36,18 +36,18 @@ fe2c2cabeff7   bridge                   bridge    local
 
 # 工作原理
 ## none网络类型
-![img](06.docker网络管理/None网络类型.png)
+![img](docker网络管理/None网络类型.png)
 
 ## container网络类型
-![img](06.docker网络管理/Container网络类型.png)
+![img](docker网络管理/Container网络类型.png)
 
 
 ## host网络类型
-![img](06.docker网络管理/Host网络类型.png)
+![img](docker网络管理/Host网络类型.png)
 
 
 ## bridge网络类型
-![img](06.docker网络管理/Bridge网络类型.png)
+![img](docker网络管理/Bridge网络类型.png)
 
 **veth pair 对应关系**
 ```shell

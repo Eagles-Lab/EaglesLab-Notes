@@ -29,7 +29,7 @@ Docker 轻量且快速。它为基于虚拟机的服务程序管理提供了一�
 # Docker架构
 Docker 使用客户端-服务器架构。Docker 客户端与 Docker 守护程序通信，后者负责构建、运行和分发 Docker 容器的繁重工作。Docker 客户端和守护程序可以在同一系统上运行，或者可以将 Docker 客户端连接到远程 Docker 守护程序。Docker 客户端和守护程序使用 REST API、通过 UNIX 套接字或网络接口进行通信。另一个 Docker 客户端是 Docker Compose，可以管理由一组容器组成的应用程序。
 
-![Docker架构](01.docker介绍与安装/docker架构图.png)
+![Docker架构](docker介绍与安装/docker架构图.png)
 
 ## Docker Host
 Docker Host是一款易于安装的应用程序，适用于 Mac、Windows 或 Linux 环境，可让构建和共享容器化应用程序和微服务。Docker Host 包括 Docker 守护程序 ( `dockerd` )、Docker 客户端 ( docker )、Docker Compose、Docker Content Trust、Kubernetes 和 Credential Helper。
