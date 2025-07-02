@@ -2,7 +2,7 @@
 
 在Kubernetes中运⾏了⼀系列控制器来确保集群的当前状态与期望状态保持⼀致，它们就是Kubernetes集群内部的管理控制中⼼或者说是”中⼼⼤脑”。例如，ReplicaSet控制器负责维护集群中运⾏的Pod数量；Node控制器负责监控节点的状态，并在节点出现故障时，执⾏⾃动化修复流程，确保集群始终处于预期的⼯作状态。
 
-![image-20240910143437460](06.Pod控制器/image-20240910143437460.png)
+![image-20240910143437460](Pod控制器/image-20240910143437460.png)
 
 - ReplicationController 和 ReplicaSet
 - Deployment
@@ -165,7 +165,7 @@ Deployment为Pod和ReplicaSet提供了⼀个声明式定义(declarative)⽅法�
 - 扩容和缩容
 - 暂停和继续Deployment
 
-<img src="06.Pod控制器/image-20240911095809938.png" alt="image-20240911095809938" style="zoom: 50%;" />
+<img src="Pod控制器/image-20240911095809938.png" alt="image-20240911095809938" style="zoom: 50%;" />
 
 ```yaml
 apiVersion: apps/v1
@@ -239,7 +239,7 @@ $ kubectl rollout undo deployment/myapp-deploy
 
 ⾦丝雀部署的核⼼思想是在实际运⾏环境中的⼀⼩部分⽤户或流量上测试新版本的软件，⽽⼤部分⽤户或流量仍然使⽤旧版本。通过对新版本进⾏有限范围的实时测试和监控，可以及早发现潜在的问题，并减少对整个系统的冲击。
 
-<img src="06.Pod控制器/image-20240911143520378.png" alt="image-20240911143520378" style="zoom:33%;" />
+<img src="Pod控制器/image-20240911143520378.png" alt="image-20240911143520378" style="zoom:33%;" />
 
 ```bash
 $ kubectl patch deployment myapp-deploy -p '{"spec":{"strategy":{"rollingUpdate":{"maxSurge":1,"maxUnavailable":0}}}}'
@@ -468,7 +468,7 @@ spec:
 
 ​	HPA可以获取每个Pod利用率，然后和HPA中定义的指标进行对比，同时计算出需要伸缩的具体值，最后实现Pod的数量的调整。其实HPA与之前的Deployment一样，也属于一种Kubernetes资源对象，它通过追踪分析RC控制的所有目标Pod的负载变化情况，来确定是否需要针对性地调整目标Pod的副本数，这是HPA的实现原理。
 
-<img src="06.Pod控制器/image-20240912140819583.png" alt="image-20240912140819583" style="zoom:33%;" />
+<img src="Pod控制器/image-20240912140819583.png" alt="image-20240912140819583" style="zoom:33%;" />
 
 查看pod的资源
 

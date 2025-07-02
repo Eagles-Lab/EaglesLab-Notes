@@ -4,11 +4,11 @@ Kubernetes`Service`定义了这样⼀种抽象：
 
 ​	⼀个`Pod`的逻辑分组，⼀种可以访问它们的策略，通常称为微服务。这⼀组`Pod`能够被`Service`访问到，通常是通过`LabelSelector`
 
-<img src="07.Service/image-20240912140110844.png" alt="image-20240912140110844" style="zoom: 33%;" />
+<img src="Service/image-20240912140110844.png" alt="image-20240912140110844" style="zoom: 33%;" />
 
 Service在很多情况下只是一个概念，真正起作用的其实是kube-proxy服务进程，每个Node节点上都运行着一个kube-proxy服务进程。当创建Service的时候会通过api-server向etcd写入创建的service的信息，而kube-proxy会基于监听的机制发现这种Service的变动，然后**它会将最新的Service信息转换成对应的访问规则**。
 
-<img src="07.Service/image-20240912152844652.png" alt="image-20240912152844652" style="zoom:33%;" />
+<img src="Service/image-20240912152844652.png" alt="image-20240912152844652" style="zoom:33%;" />
 
 
 # 工作模式
@@ -19,19 +19,19 @@ kube-proxy目前支持三种工作模式:
 
 ​	userspace模式下，kube-proxy会为每一个Service创建一个监听端口，发向Cluster IP的请求被Iptables规则重定向到kube-proxy监听的端口上，kube-proxy根据LB算法选择一个提供服务的Pod并和其建立链接，以将请求转发到Pod上。  该模式下，kube-proxy充当了一个四层负责均衡器的角色。由于kube-proxy运行在userspace中，在进行转发处理时会增加内核和用户空间之间的数据拷贝，虽然比较稳定，但是效率比较低。
 
-<img src="07.Service/image-20240912170627727.png" alt="image-20240912170627727" style="zoom:33%;" />
+<img src="Service/image-20240912170627727.png" alt="image-20240912170627727" style="zoom:33%;" />
 
 ## iptables模式
 
 ​	iptables模式下，kube-proxy为service后端的每个Pod创建对应的iptables规则，直接将发向Cluster IP的请求重定向到一个Pod IP。该模式下kube-proxy不承担四层负责均衡器的角色，只负责创建iptables规则。该模式的优点是较userspace模式效率更高，但不能提供灵活的LB策略，当后端Pod不可用时也无法进行重试。
 
-<img src="07.Service/image-20240912170931956.png" alt="image-20240912170931956" style="zoom:33%;" />
+<img src="Service/image-20240912170931956.png" alt="image-20240912170931956" style="zoom:33%;" />
 
 ## ipvs模式
 
 ​	ipvs模式和iptables类似，kube-proxy监控Pod的变化并创建相应的ipvs规则。ipvs相对iptables转发效率更高。除此以外，ipvs支持更多的LB算法。
 
-<img src="07.Service/image-20240912171043118.png" alt="image-20240912171043118" style="zoom:33%;" />
+<img src="Service/image-20240912171043118.png" alt="image-20240912171043118" style="zoom:33%;" />
 
 ```yaml
 # 创建三个pod
@@ -259,7 +259,7 @@ myapp-deploy-57bff895d5-fbln4
 
 ​	一个Service由一组Pod组成，这些Pod通过Endpoints暴露出来，**Endpoints是实现实际服务的端点集合**。换句话说，service和pod之间的联系是通过endpoints实现的。
 
-<img src="07.Service/image-20240912172501813.png" alt="image-20240912172501813" style="zoom:33%;" />
+<img src="Service/image-20240912172501813.png" alt="image-20240912172501813" style="zoom:33%;" />
 
 ```bash
 $ kubectl get endpoints -o wide
@@ -433,7 +433,7 @@ service-headliness.default.svc.cluster.local. 30 IN A 10.244.196.144
 
 ​	在之前的样例中，创建的Service的ip地址只有集群内部才可以访问，如果希望将Service暴露给集群外部使用，那么就要使用到另外一种类型的Service，称为NodePort类型。NodePort的工作原理其实就是**将service的端口映射到Node的一个端口上**，然后就可以通过`NodeIp:NodePort`来访问service了。
 
-<img src="07.Service/image-20240913143156247.png" alt="image-20240913143156247" style="zoom:33%;" />
+<img src="Service/image-20240913143156247.png" alt="image-20240913143156247" style="zoom:33%;" />
 
 ```yaml
 apiVersion: v1
@@ -466,13 +466,13 @@ myapp-deploy-659f9975b8-2sntn
 
 ​	LoadBalancer和NodePort很相似，目的都是向外部暴露一个端口，区别在于LoadBalancer会在集群的外部再来做一个负载均衡设备，而这个设备需要外部环境支持的，外部服务发送到这个设备上的请求，会被设备负载之后转发到集群中。
 
- ![image-20240913154405309](07.Service/image-20240913154405309.png)
+ ![image-20240913154405309](Service/image-20240913154405309.png)
 
 ## ExternalName类型的Service
 
 ​	ExternalName类型的Service用于引入集群外部的服务，它通过`externalName`属性指定外部一个服务的地址，然后在集群内部访问此service就可以访问到外部的服务了。
 
-<img src="07.Service/image-20240913160143805.png" alt="image-20240913160143805" style="zoom:33%;" />
+<img src="Service/image-20240913160143805.png" alt="image-20240913160143805" style="zoom:33%;" />
 
 ```yaml
 apiVersion: v1
@@ -507,7 +507,7 @@ www.a.shifen.com.       30      IN      A       180.101.50.188
 
 基于这种现状，kubernetes提供了Ingress资源对象，Ingress只需要一个NodePort或者一个LB就可以满足暴露多个Service的需求。工作机制大致如下图表示：
 
-<img src="07.Service/image-20240913161756342.png" alt="image-20240913161756342" style="zoom:33%;" />
+<img src="Service/image-20240913161756342.png" alt="image-20240913161756342" style="zoom:33%;" />
 
 实际上，Ingress相当于一个7层的负载均衡器，是kubernetes对反向代理的一个抽象，它的工作原理类似于Nginx，可以理解成在**Ingress里建立诸多映射规则，Ingress Controller通过监听这些配置规则并转化成Nginx的反向代理配置 , 然后对外部提供服务**。在这里有两个核心概念：
 
@@ -521,7 +521,7 @@ Ingress（以Nginx为例）的工作原理如下：
 3. Ingress控制器会将生成的Nginx配置写入到一个运行着的Nginx服务中，并动态更新
 4. 到此为止，其实真正在工作的就是一个Nginx了，内部配置了用户定义的请求转发规则
 
-<img src="07.Service/image-20240914142642245.png" alt="image-20240914142642245" style="zoom:33%;" />
+<img src="Service/image-20240914142642245.png" alt="image-20240914142642245" style="zoom:33%;" />
 
 ## 安装helm
 
@@ -575,7 +575,7 @@ ingress-nginx-controller-bjk4s   1/1     Running   0          12s
 
 创建如下两个资源模型
 
-![image-20240914152836257](07.Service/image-20240914152836257.png)
+![image-20240914152836257](Service/image-20240914152836257.png)
 
 ```yaml
 apiVersion: apps/v1
@@ -717,11 +717,11 @@ Rules:
 
 访问测试
 
-![image-20240914154740672](07.Service/image-20240914154740672.png)
+![image-20240914154740672](Service/image-20240914154740672.png)
 
 其中nginx多次访问主机名，可以看到负载均衡
 
-![image-20240914154758983](07.Service/image-20240914154758983.png)
+![image-20240914154758983](Service/image-20240914154758983.png)
 
 ## Https代理
 
@@ -786,8 +786,8 @@ spec:
 
 访问测试
 
-![image-20240914155615236](07.Service/image-20240914155615236.png)
+![image-20240914155615236](Service/image-20240914155615236.png)
 
 可以看到负载均衡
 
-![image-20240914155628119](07.Service/image-20240914155628119.png)
+![image-20240914155628119](Service/image-20240914155628119.png)
