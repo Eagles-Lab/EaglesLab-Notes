@@ -54,8 +54,7 @@ if [ ! -f "/etc/docker/daemon.json" ] || ! grep -q "data-root" "/etc/docker/daem
     "max-size": "100m",
     "max-file": "100"
   },
-  "insecure-registries": ["iproute.cn:6443"],
-  "registry-mirrors": ["https://iproute.cn:6443"]
+  "registry-mirrors": ["https://docker.1panel.live","https://docker.m.daocloud.io"]
 }
 EOF
     log_info "已创建Docker daemon配置文件"
