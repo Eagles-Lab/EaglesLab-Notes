@@ -531,11 +531,8 @@ Apache httpd的URL匹配规则主要包括以下几种指令:
 **指令常用选项：**
 
 1. `<Location>` 指令:
-   - `path`: 指定需要匹配的 URL 路径。可以使用通配符。
-   - `Order`: 控制允许和拒绝操作的顺序。可以是 `Allow,Deny` 或 `Deny,Allow`。
-   - `Allow`: 指定允许访问的主机或 IP 地址。
-   - `Deny`: 指定拒绝访问的主机或 IP 地址。
-   - `Require`: 指定需要通过身份验证才能访问的用户或组。
+   - `path`: 指定需要匹配的 URL 路径。可以使用通配符
+   - `Require`: 指定需要通过身份验证才能访问的用户或组
 2. `<LocationMatch>` 指令:
    - `regex`: 指定一个正则表达式来匹配 URL。
    - 其他选项同 `<Location>` 指令。
@@ -554,20 +551,20 @@ Apache httpd的URL匹配规则主要包括以下几种指令:
 ## 配置方法
 
 ```shell
-#基于目录
-<Directory “/path">
+# 基于目录
+<Directory "/path">
 ...
 </Directory>
-#基于文件
-<File “/path/file”>
+# 基于文件
+<File "/path/file">
 ...
 </File>
-#基于文件通配符
-<File “/path/*file*”>
+# 基于文件通配符
+<File "/path/*file">
 ...
 </File>
-#基于正则表达式
-<FileMatch “regex”>
+# 基于正则表达式
+<FileMatch "regex">
 ...
 </FileMatch>
 ```
