@@ -50,7 +50,7 @@ Server built:   Jan 29 2025 00:00:00
 HTTP/1.1 200 OK
 ```
 
-## httpd命令
+## httpd 命令
 
 httpd 为Apache HTTP服务器程序。
 
@@ -377,7 +377,6 @@ This is NO.3 website!
 
 基于 FQDN 虚拟主机
 
-
 ```shell
 # 基于 FQDN 虚拟主机
 [root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site.conf
@@ -505,14 +504,12 @@ https://httpd.apache.org/docs/current/mod/mod_log_config.html#logformat
 - %{User-Agent}i 请求报文中首部“User-Agent”的值；即发出请求的应用程序，多数为浏览器型号
 
 
-## 案例分析1
+## 案例分析
 
 新增自定义 LogFormat 并在 CustomLog 中引用
 
 
-# 访问控制
-
-## URI匹配规则
+# URI 匹配规则
 
 Apache httpd的URL匹配规则主要包括以下几种指令:
 
@@ -575,7 +572,7 @@ Apache httpd的URL匹配规则主要包括以下几种指令:
 </FileMatch>
 ```
 
-## 匹配案例
+## 案例分析
 
 1. **精确匹配**:
 
@@ -639,15 +636,17 @@ Apache httpd的URL匹配规则主要包括以下几种指令:
 
 ```bash
 <Virtualhost www.example.com:80>
-      Documentroot "/var/www/example"
-      ServerName www.example.com
+   Documentroot "/var/www/example"
+   ServerName www.example.com
 </Virtualhost>
 ```
 
 在这个例子中,任何发送到 `www.example.com:80` 的请求都会被映射到 `/var/www/example` 目录,并由 Apache 配置为 `www.example.com` 的虚拟主机。
 
 
-## Options 指令
+# Options 指令
+
+## 相关介绍
 
 用于控制特定目录下启用的服务器功能特性（如目录列表、符号链接等）
 
@@ -671,7 +670,7 @@ Apache httpd的URL匹配规则主要包括以下几种指令:
 | All     | 启用除 `MultiViews` 外的所有特性（默认值）                         | 快速启用常用功能           |
 | None    | 禁用所有额外特性      | 严格安全策略      |
 
-### 案例分析
+## 案例分析
 
 使用 `Index` 和 `FollowSymLinks`，当访问无索引文件的目录时显示文件列表，允许符号链接跳转；依次去掉 `FollowSymLinks` 和 `Index` 观察现象。
 
@@ -695,7 +694,9 @@ EOF
 ```
 
 
-## AllowOverride 指令
+# AllowOverride 指令
+
+## 相关介绍
 
 用于控制是否允许在 .htaccess 文件中覆盖主配置文件的设定，通常用于目录级的动态配置，无需重启服务即可生效。作用域限制​为：仅能在 `​​<Directory>` 块​​中生效，在 `<Location>`、`<Files>` 等配置段中无效。
 
@@ -712,7 +713,7 @@ EOF
 | Limit         | 允许覆盖访问控制指令（如 Allow, Deny, Order）。                                        |
 | Options[=...] | 允许覆盖目录特性控制指令（如 Options FollowSymLinks，可指定具体允许的选项）。           |
 
-### 案例分析
+## 案例分析
 
 通过 `AllowOverride` 指令和 `.htaccess` 文件，动态为指定目录设定特性控制指令
 
@@ -737,372 +738,284 @@ EOF
 # 通过浏览器访问测试验证
 ```
 
-## 基于IP地址的访问控制
+# 访问控制
 
-* 针对各种资源，可以基于以下两种方式的访问控制
+针对各种资源，通常基于两种方式：客户端来源地址和用户账号来进行访问控制。
 
-  * 客户端来源地址
-  * 用户账号
+## 基于IP地址
 
-* 基于客户端的IP地址的访问控制
+基于客户端IP地址的访问控制：
+   - Apache 2.4 默认 **​​拒绝所有未显式授权**​ ​的访问，需明确配置 `Require all granted` 开放全局访问
+   - `Require host` 可基于域名控制（如 Require host example.com），但需注意 DNS 解析延迟可能影响性能
+   - 不带 `not` 的多个 `Require` 是“或”关系（任一满足即可）
+   - 带 `not` 和不带 `not` 的语句混合时是“与”关系（需同时满足）
 
-  * 无明确授权的目录，默认拒绝
+常见语法：
+   - 允许所有主机访问：`Require all granted`
+   - 拒绝所有主机访问：`Require all denied`
+   - 授权/拒绝指定来源的IP/host访问：`Require [not] <ip|host>  <ipaddress|hostname>`
 
-  * 允许所有主机访问：`Require all granted`
+组合策略配置：
+   - `​​<RequireAll>` 内部所有条件必须​​同时满足​​（逻辑与）
+   - `<RequireAny>` 内部任一条件满足即可（逻辑或）
 
-  * 拒绝所有主机访问：`Require all denied`
+## 基于用户
 
-  * 授权指定来源的IP访问：`Require ip <IPADDR>`
+基于用户的访问控制主要通过身份验证（Authentication）和授权（Authorization）机制实现：
 
-  * 拒绝特定的IP访问：`Require not ip <IPADDR>`
+**认证类型**：
+- Basic 认证​​：用户名密码以 Base64 编码传输（明文，需配合 HTTPS 保证安全）
+- ​​Digest 认证​​：密码哈希传输（更安全，但配置复杂）
 
-  * 授权特定主机访问：`Require host <HOSTNAME>`
+**核心配置指令**：
+- AuthName​​：定义认证区域名称（浏览器弹窗提示文本）
+- AuthUserFile​​：指定存储用户名密码的文本文件路径（如 .htpasswd）
+- ​​Require​​：授权规则（如 valid-user 允许所有认证用户，或指定用户/组）
 
-  * 拒绝特定主机访问：`Require not host <HOSTNAME>`
-
-    需要注释掉Directory下的 Require all granted。在Directory标签下编辑。
-
-* 黑名单
-
-```shell
-[root@localhost dir]# vim /etc/httpd/conf/httpd.conf
-<Directory "/data/html">
-  <RequireAll>
-    Require all granted
-    Require not ip 192.168.88.1 #拒绝特定IP
-  </RequireAll>
-# Require all granted 这一行记得注释掉,要不然里面写的生效不了
-</Directory>
-```
-
-* 白名单
+**密码文件**
 
 ```shell
-<RequireAny>
-	Require all denied
-	Require ip 172.16.1.1 #允许特定IP
-</RequireAny>
+[root@localhost ~]# htpasswd  --help
+Usage:
+	htpasswd [-cimB25dpsDv] [-C cost] [-r rounds] passwordfile username
+   ...
+# 创建文件并追加用户
+[root@localhost ~]# htpasswd -c /etc/httpd/.htpasswd user1
+# 追加用户
+[root@localhost ~]# htpasswd /etc/httpd/.htpasswd user2
 ```
 
-* 只允许特定的网段访问
+## 基于用户组
+
+可以对 htpasswd 产生的多用户进行分组管理
+
+组文件：`echo "admins: user1 user2" >  /etc/httpd/.htgroup `
+配置授权组：
 
 ```shell
-<Directory "/data/html">
-<Requireany>
-    Require all denied
-    Require ip 192.168.88.0/24
-</Requireany>
-</Directory>
+AuthGroupFile /etc/apache2/.htgroup
+Require group admins  # 仅允许 admins 组成员
 ```
-
-* 只允许特定的主机访问
-
-```shell
-<Directory "/data/html">
-<Requireany>
-        Require all denied
-        Require ip 192.168.175.10        #只允许特定的主机访问
-</Requireany>
-</Directory>
-```
-
-## 基于用户的访问控制
-
-* 认证质询：WWW-Authenticate，响应码为401，拒绝客户端请求，并说明要求客户端需要提供账号和密码
-* 认证：Authorization，客户端用户填入账号和密码后再次发送请求报文；认证通过时，则服务器发送响应的资源
-* 认证方式两种
-  * basic：明文
-  * digest：消息摘要认证,兼容性差
-* 安全域：需要用户认证后方能访问的路径；应该通过名称对其进行标识，以便于告知用户认证的原因用户的账号和密码
-* 虚拟账号：仅用于访问某服务时用到的认证标识
-
-**配置方法**
-
-* 定义安全域，允许账号文件中的所有用户登录访问：Require valid-user 表示只要在这个文件里面的用户都是有效用户，都可以访问。
-
-```shell
-<Directory “/path">
-Options None
-AllowOverride None
-AuthType Basic
-AuthName "String“                              #文字提示描述
-AuthUserFile "/PATH/HTTPD_USER_PASSWD_FILE"    #指定存放密码文件
-Require user username1 username2 ...           #限制特定的人才能访问
-</Directory>
-```
-
-* 提供账号和密码存储（文本文件） 使用专用命令完成此类文件的创建及用户管理
-
-```shell
-htpasswd [options] /PATH/HTTPD_PASSWD_FILE username
-```
-
-* 选项
-  * **-c：**自动创建文件，仅应该在文件不存在时使用，不然就会覆盖
-  * **-p：**明文密码
-  * **-d：**CRYPT格式加密，默认
-  * **-m：**md5格式加密
-  * **-s：**sha格式加密
-  * **-D：**删除指定用户
-
-### 方法一：修改主配置文件
-
-* 生成文件并且创建用户
-
-```shell
-[root@localhost ~]# htpasswd -c /etc/httpd/conf.d/.httpuser user01
-New password: 
-Re-type new password: 
-Adding password for user user
-[root@localhost ~]# htpasswd /etc/httpd/conf.d/.httpuser user02
-New password: 
-Re-type new password: 
-Adding password for user user02
-[root@localhost ~]# cat /etc/httpd/conf.d/.httpuser
-user01:$apr1$yE3jfs2/$77r76q0l6lTtREczR6uQf1
-user02:$apr1$gpNpvZZr$acEh6USVYPR6/WboOMUl91
-```
-
-* 在配置文件中引用这个文件
-
-```shell
-[root@localhost ~]# mkdir /data/html/admin
-[root@localhost ~]# echo "<h1>Hello Linux</h1>" > /data/html/admin/index.html
-[root@localhost ~]# vim /etc/httpd/conf.d/test.conf
-<Directory /data/html/admin>
-    AuthType Basic
-    AuthName "FBI warning"
-    AuthUserFile "/etc/httpd/conf.d/.httpuser"
-    Require user user01 
-</Directory>
-[root@localhost ~]# systemctl reload httpd
-```
-
-* 在访问的时候就需要输入密码
-
-![img](Apache/p4rlw3TfUa4CiBVt.png!thumbnail)
-
-### 方法二：修改.htaccess文件
-
-* 生成文件并且创建用户
-
-```shell
-[root@localhost ~]# htpasswd -c /etc/httpd/conf.d/.httpuser user01
-New password: 
-Re-type new password: 
-Adding password for user user
-[root@localhost ~]# htpasswd /etc/httpd/conf.d/.httpuser user02
-New password: 
-Re-type new password: 
-Adding password for user user02
-[root@localhost ~]# cat /etc/httpd/conf.d/.httpuser 
-user01:$apr1$yE3jfs2/$77r76q0l6lTtREczR6uQf1
-user02:$apr1$gpNpvZZr$acEh6USVYPR6/WboOMUl91
-```
-
-* 设置`AllowOverride`选项为All
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/test.conf
-<Directory "/data/html/admin">
-    AllowOverride Authconfig
-    Require all granted
-</Directory>
-```
-
-* 写入`.htaccess`文件
-
-```shell
-[root@localhost ~]# vim /data/html/admin/.htaccess
-AuthType Basic
-AuthName "FBI warning"
-AuthUserFile "/etc/httpd/conf.d/.httpuser"
-Require user user01
-[root@localhost ~]# systemctl reload httpd
-```
-
-* 最后测试是否成功
-
-![img](Apache/EtQ1EU4TU7FKwsJT.png!thumbnail)
-
-## 基于组账号进行认证
-
-* 可以对htpasswd产生的虚拟用户进行分组管理
-
-```shell
-<Directory “/path">
-AuthType Basic
-AuthName "String“
-AuthUserFile "/PATH/HTTPD_USER_PASSWD_FILE"
-AuthGroupFile "/PATH/HTTPD_GROUP_FILE"
-Require group grpname1 grpname2 ...
-</Directory>
-```
-
-### 案例分析
-
-* 创建用户
-
-```shell
-[root@localhost ~]# htpasswd -c /etc/httpd/conf.d/.httpuser user01
-New password: 
-Re-type new password: 
-Adding password for user user
-[root@localhost ~]# htpasswd /etc/httpd/conf.d/.httpuser user02
-New password: 
-Re-type new password: 
-Adding password for user user02
-[root@localhost ~]# cat /etc/httpd/conf.d/.httpuser 
-user01:$apr1$yE3jfs2/$77r76q0l6lTtREczR6uQf1
-user02:$apr1$gpNpvZZr$acEh6USVYPR6/WboOMUl91
-```
-
-* 创建组
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/.httpgroup
-webadmin: user01 user02
-```
-
-* 修改httpd配置文件
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/test.conf
-<Directory "/data/html/admin">
-AuthType Basic
-AuthName "FBI warning"
-AuthUserFile "/etc/httpd/conf.d/.httpuser"
-AuthGroupFile "/etc/httpd/conf.d/.httpgroup"
-Require group webadmin
-</Directory>
-```
-
-
-# 别名模块
-
-alias_module 别名，可以隐藏真实文件系统路径。这里实现的目的是用 news 文件目录来替代 newsdir/index.html 访问文件路径，从而起到隐藏真实文件系统路径的目的。
-
-- 我们让`dir`目录隐藏，让其可以被`news`路径访问
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf/httpd.conf
-<IfModule alias_module>
-    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
-    Alias /news/ /data/html/dir/
-    <Directory "/data/html/dir">
-    	Require all denied
-	</Directory>
-</IfModule>
-[root@localhost ~]# systemctl reload httpd
-```
-
-![img](Apache/别名模块测试验证截图.png)
 
 ## 案例分析
 
-通过alias配置，实现访问路径到本地文件系统的映射
+混合IP和用户认证：仅允许本地x.x.x.x地址可以通过eagleslab01用户访问
 
-1. 新增一个子配置文件，内容如下：
+```shell
+[root@localhost ~]# mkdir -pv /data/site06/admin
+[root@localhost ~]# echo "This is NO.6 website!" > /data/site06/admin/index.html
+[root@localhost ~]# htpasswd -c /etc/httpd/.htpasswd eagleslab01
+[root@localhost ~]# htpasswd /etc/httpd/.htpasswd eagleslab02
+[root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site06.conf
+Listen 8006
+<Virtualhost 172.16.175.129:8006>
+   Documentroot /data/site06
+   <Directory /data/site06/admin>
+      AuthType Basic
+      AuthName "FBI warning"
+      AuthUserFile "/etc/httpd/.htpasswd"
+      <RequireAll>
+         Require user eagleslab01
+         # 客户端主机地址
+         Require ip 172.16.175.1
+         # 同时满足IP和用户认证
+      </RequireAll>
+   </Directory>
+</Virtualhost>
+EOF
+[root@localhost ~]# systemctl restart httpd
+# 测试验证
+# 本地主机访问 403
+[root@localhost ~]# curl -u eagleslab01:123456 http://172.16.175.129:8006/admin
+# 客户端主机访问 301/200
+client ~ % curl -u eagleslab01:123456 http://172.16.175.129:8006/admin
+# 客户端主机访问 401
+client ~ % curl -u eagleslab02:123456 http://172.16.175.129:8006/admin
 
-```bash
-[root@localhost ~]# vim /etc/httpd/conf.d/pub.conf
-<Virtualhost 192.168.88.10:80 >
-        ServerName 192.168.88.10
-        Documentroot /data
-        alias /pub /data/html/pub
+```
+
+# URL 处理机制
+
+​​**别名（Alias）​​ 和 ​​重定向（Redirect）**​​ 是两种不同的 URL 处理机制，核心区别在于​**​是否改变客户端浏览器地址栏的 URL​​** 以及​**​是否触发新的 HTTP 请求​​**
+
+## 别名 Alias
+
+用于将 URL 路径映射到文件系统的不同位置，实现灵活的资源管理和访问控制。
+
+### 相关介绍
+
+**路径资源解耦**：将 URL 路径（如 `/images`）映射到物理目录（如 `/var/www/media`），无需修改实际文件位置，示例如下：
+```shell
+Alias "/images" "/var/www/html/media"
+访问 http://domain.com/images/photo.jpg 实际返回 /var/www/html/media/photo.jpg
+```
+**简化URL结构**：隐藏复杂路径，提升用户体验和 SEO 友好性
+**多域名/路径管理**：同一服务器托管多个站点，示例如下：
+```shell
+<VirtualHost *:80>
+    ServerName blog.example.com
+    Alias "/" "/var/www/blog"
+</VirtualHost>
+<VirtualHost *:80>
+    ServerName notes.example.com
+    Alias "/" "/var/www/notes"
+</VirtualHost>
+...
+```
+
+**相关指令**
+```shell
+# 将 URL 映射到文件系统位置
+Alias [URL-path] file-path|directory-path
+
+# 使用正则表达式将 URL 映射到文件系统位置
+AliasMatch regex file-path|directory-path
+
+# 将 URL 映射到文件系统位置，并将目标指定为 CGI 脚本
+ScriptAlias [URL-path] file-path|directory-path
+```
+
+
+### 案例分析
+
+将 `/usr/share/httpd/icons` 独立资源通过 `/icons` 别名暴露简洁路径
+
+```shell
+[root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site07.conf
+Listen 8007
+<Virtualhost 172.16.175.129:8007>
+   Alias /icons /usr/share/httpd/icons
+   <Directory /usr/share/httpd/icons>
+      Options Indexes FollowSymLinks
+      AllowOverride none
+      Require all granted
+   </Directory>
+</Virtualhost>
+EOF
+# 通过浏览器访问 http://172.16.175.129:8007/icons/
+# [root@localhost ~]# curl -I http://172.16.175.129:8007/icons/ 返回 200
+
+```
+
+## 重定向 Redirect
+
+强制客户端跳转到另一个 URL，通常用于路径迁移或权限控制
+
+### 相关介绍
+
+**网站改版迁移**​​：旧路径 `http://old.com` 永久跳转到 `http://new.com`（301）
+​**​权限控制**​​：未登录用户访问 `/admin` 时跳转到登录页（302）
+**临时维护**​​：将流量临时导向通知页面（302）
+
+**相关指令**：
+
+```shell
+Redirect [status] [URL-path] URL
+   permanent  永久，返回301
+   temp  临时，返回302
+   seeother 资源替换 返回303
+   gone  永久移除，返回410
+
+RedirectMatch [status] regex URL
+   使用正则表达式代替简单的路径前缀匹配
+
+RedirectPermanent URL-path URL
+   等效 Redirect permanent
+
+RedirectTemp URL-path URL
+   等效 Redirect temp
+
+# https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html
+RewriteEngine on|off
+   启用或禁用运行时重写引擎
+
+RewriteCond TestString CondPattern [flags]
+   定义了重写发生的条件
+
+RewriteRule Pattern Substitution [flags]
+   定义重写引擎的规则
+
+```
+
+
+### 案例分析1
+
+网站改版迁移：旧域名访问新网站
+
+```shell
+[root@localhost ~]# mkdir -pv /data/new_site08/ 
+[root@localhost ~]# echo "This is New NO.8 website!" > /data/new_site08/index.html
+[root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site08.conf
+# old site 
+<Virtualhost 172.16.175.129>
+   ServerName cloud.eagleslabtest.com
+   Redirect 301 / http://ncloud.eagleslabtest.com/
 </Virtualhost>
 
-<Directory /data>
-        AllowOverride none
-        Require all granted
-</Directory>
-# 通过alias模块，使得我们访问/pub的时候，自动帮我们映射到/data/html/pub
-```
-
-2. 创建相关目录及访问文件
-
-```bash
-[root@localhost ~]# mkdir -p /data/html/pub
-[root@localhost ~]# echo "in /data/html/pub" > /data/html/pub/index.html
-```
-
-3. 赋予该目录及子目录权限
-
-```bash
-[root@localhost ~]# chmod 755 -R /data
-```
-
-4. 检查配置并且重启httpd服务
-
-```bash
-[root@localhost ~]# httpd -t
+# new site
+<Virtualhost 172.16.175.129>
+   ServerName ncloud.eagleslabtest.com
+   Documentroot /data/new_site08
+   <Directory /data/new_site08>
+      Require all granted
+   </Directory>
+</Virtualhost>
+EOF
+[root@localhost ~]# echo "172.16.175.129 ncloud.eagleslabtest.com" >> /etc/hosts
+[root@localhost ~]# echo "172.16.175.129 cloud.eagleslabtest.com" >> /etc/hosts
 [root@localhost ~]# systemctl restart httpd
+# 测试验证
+[root@localhost ~]# curl -L http://cloud.eagleslabtest.com/index.html
+This is New NO.8 website!
+[root@localhost ~]# curl -I http://cloud.eagleslabtest.com/index.html
+HTTP/1.1 301 Moved Permanently
+Date: Mon, 07 Jul 2025 19:20:27 GMT
+Server: Apache/2.4.62 (Rocky Linux)
+Location: http://ncloud.eagleslabtest.com/index.html
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+
 ```
 
-5. 访问测试：
+### 案例分析2
 
-访问：http://192.168.88.136/pub
+用户访问需登录的资源（如个人中心、订单页），系统通过302重定向到登录页，并在登录成功后携带return_url参数跳回原页面
 
-<img src="Apache/Alias访问测试.png" alt="img-Alias访问测试" style="zoom:80%;" />
-
-# httpd服务状态信息显示
-
-当我们需要获取 httpd 服务器在运行过程中的实时状态信息时可以使用该功能
-
-1. 新建子配置文件，并且内容如下：
-
-```bash
-[root@localhost ~]# vim /etc/httpd/conf.d/test.conf
-<Location "/status">
-    <Requireany>
-        Require all denied
-        Require ip 192.168.88.0/24
-		#定义特定的网段能够访问
-    </Requireany>
-        SetHandler server-status
-		#指定状态信息
-</Location>
-ExtendedStatus On
+```shell
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/profile
+RewriteCond %{HTTP_COOKIE} !session_token
+RewriteRule ^(.*)$ /login?return_url=$1 [R=302,L]
 ```
 
-2. 检查配置并且重启httpd服务
+### 案例分析3
 
-```bash
-[root@localhost ~]# httpd -t
-[root@localhost ~]# systemctl restart httpd
+根据User-Agent将移动端用户临时重定向至移动版站点
+
+```shell
+RewriteCond %{HTTP_USER_AGENT} "android|iphone|ipad" [NC]
+RewriteCond %{HTTP_HOST} ^www\.example\.com$
+RewriteRule ^(.*)$ http://m.example.com/$1 [R=302,L]
 ```
-
-3. 访问测试：
-
-   在浏览器中访问http://192.168.88.10/status
-
-   获取 httpd 服务状态信息成功
-
-<img src="Apache/image-20240715152308932.png" alt="image-20240715152308932" style="zoom: 50%;" />
-
-
-
-
 
 # 网页压缩技术
 
-* 使用mod_deflate模块压缩页面优化传输速度
-* 适用场景
-  * 节约带宽，额外消耗CPU；同时，可能有些较老浏览器不支持
-  * 压缩适于压缩的资源，例如文本文件
-* 确认是否加载浏览器压缩模块
+网页压缩技术主要通过 ​​mod_deflate 模块​​实现，它能显著减少传输数据量，提升网站加载速度和用户体验
 
-```shell
-[root@localhost ~]# httpd -M |grep deflate
- deflate_module (shared)
-```
+## 相关介绍
 
-* 压缩指令
+- 使用 mod_deflate 模块压缩页面优化传输速度
+- 适用场景
+   - 节约带宽，额外消耗CPU；同时，可能有些较老浏览器不支持
+   - 压缩适于压缩的资源，例如文本文件
+
+
+**压缩相关指令**
 
 ```shell
 # 可选项
 SetOutputFilter DEFLATE
-# 指定对哪种MIME类型进行压缩，必须指定项
+# 指定对哪种 MIME 类型进行压缩，必须指定项
 AddOutputFilterByType DEFLATE text/plain
 AddOutputFilterByType DEFLATE text/html
 AddOutputFilterByType DEFLATE application/xhtml+xml
@@ -1115,7 +1028,7 @@ AddOutputFilterByType DEFLATE text/css
 # 也可以同时写多个
 AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript
 
-# 压缩级别 (Highest 9 - Lowest 1) ，默认gzip  默认级别是有库决定
+# 压缩级别 (Highest 9 - Lowest 1) ，默认gzip  默认级别是由库决定
 DeflateCompressionLevel 9
 # 排除特定旧版本的浏览器，不支持压缩
 # Netscape 4.x 只压缩text/html
@@ -1123,152 +1036,69 @@ BrowserMatch ^Mozilla/4 gzip-only-text/html
 # Netscape 4.06-08 三个版本 不压缩
 BrowserMatch ^Mozilla/4\.0[678] no-gzip
 # Internet Explorer标识本身为“Mozilla / 4”，但实际上是能够处理请求的压缩。如果用户代理首部
-匹配字符串“MSIE”（“B”为单词边界”），就关闭之前定义的限制
+# 匹配字符串“MSIE”（“B”为单词边界”），就关闭之前定义的限制
 BrowserMatch \bMSI[E] !no-gzip !gzip-only-text/html
 
 SetOutputFilter DEFLATE		# 启用Gzip压缩
 ```
 
-## 压缩对比实验
+## 案例分析
 
 ```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/test.conf
-[root@localhost ~]# cat /etc/httpd/conf.d/test.conf 
-<Virtualhost *:80>
-         Documentroot /data/website1/
-         Servername www.aaa.com
-         <Directory /data/website1/>
-            Require all granted
-         </Directory>
-         CustomLog "logs/a_access_log" combined
-         AddOutputFilterByType DEFLATE text/plain
-         AddOutputFilterByType DEFLATE text/html     
-         SetOutputFilter DEFLATE
+
+# 准备实验环境
+[root@localhost ~]# mkdir -pv /data/site0901/ /data/site0902/
+[root@localhost ~]# tree /etc > /data/site0901/blog.html
+[root@localhost ~]# tree /etc > /data/site0902/blog.html
+# 配置对比vhost
+[root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site09.conf
+Listen 8009
+Listen 8010
+<Virtualhost *:8009>
+   Documentroot /data/site0901/
+   <Directory /data/site0901/>
+      Require all granted
+   </Directory>
+   AddOutputFilterByType DEFLATE text/plain
+   AddOutputFilterByType DEFLATE text/html     
+   SetOutputFilter DEFLATE
 </Virtualhost>
 
-<Virtualhost *:80>
-         Documentroot /data/website2/
-         Servername www.bbb.com
-         <Directory /data/website2/>
-            Require all granted
-         </Directory>
-         CustomLog "logs/a_access_log" combined
-         # AddOutputFilterByType DEFLATE text/plain   
-         # AddOutputFilterByType DEFLATE text/html   
-         # DeflateCompressionLevel 9
+<Virtualhost *:8010>
+   Documentroot /data/site0902/
+   <Directory /data/site0902/>
+      Require all granted
+   </Directory>
 </Virtualhost>
-
-# /etc/hosts添加本地解析
-
-# 准备测试文件
-[root@localhost ~]# tree /etc > blog.html
-
-# 准备目录
-[root@localhost ~]# mkdir -p /data/website1
-[root@localhost ~]# mkdir -p /data/website2
-
-# 拷贝测试文件到网站目录
-[root@localhost ~]# cp blog.html /data/website1/blog_test.html
-[root@localhost ~]# cp blog.html /data/website2/blog_test.html
-
-# 给文件赋予权限
-[root@localhost ~]# chmod 644 /data/website1/blog_test.html
-[root@localhost ~]# chmod 644 /data/website2/blog_test.html
-
-[root@localhost ~]# ll /data/website1/
-total 36
--rw-r--r--. 1 root root 36637 Jan 18 22:45 blog_test.html
-[root@localhost ~]# ll /data/website2/
-total 36
--rw-r--r--. 1 root root 36637 Jan 18 22:46 blog_test.html
-# 重启httpd服务
+EOF
 [root@localhost ~]# systemctl restart httpd
-# 默认curl没有压缩，需要加参数 --compressed，输出结果关注 Content-Length 
-[root@localhost ~]# curl -I --compressed www.aaa.com/blog_test.html
-[root@localhost ~]# curl -I --compressed www.bbb.com/blog_test.html
+# 默认curl没有压缩，需要加参数 --compressed，输出结果关注 Content-Encoding: gzip & Content-Length 
+[root@localhost ~]# curl -I --compressed 127.0.0.1:8009/blog.html
+[root@localhost ~]# curl -I --compressed 127.0.0.1:8010/blog.html
+
 ```
 
 # HTTPS
 
-* SSL是基于IP地址实现,单IP的httpd主机，仅可以使用一个https虚拟主机
-* 实现多个虚拟主机站点，apache不能支持，nginx支持
-* SSL实现过程
-  * 客户端发送可供选择的加密方式，并向服务器请求证书
-  * 服务器端发送证书以及选定的加密方式给客户端
-  * 客户端取得证书并进行证书验证，如果信任给其发证书的CA
-    * 验证证书来源的合法性；用CA的公钥解密证书上数字签名
-    * 验证证书的内容的合法性：完整性验证
-    * 检查证书的有效期限
-    * 检查证书是否被吊销
-    * 证书中拥有者的名字，与访问的目标主机要一致
-  * 客户端生成临时会话密钥（对称密钥），并使用服务器端的公钥加密此数据发送给服务器，完成密钥交换
-  * 服务用此密钥加密用户请求的资源，响应给客户端
-
-## 颁发自建证书
-
-一、通过openssl工具来自己生成一个证书，然后颁发给自己
-
-```shell
-# 1. 安装mod_ssl和openssl
-[root@localhost ~]# yum install mod_ssl openssl -y
-
-# 2.生成2048位的加密私钥
-[root@localhost ~]# openssl genrsa -out server.key 2048
-
-# 3.生成证书签名请求（CSR）
-[root@localhost ~]# openssl req -new -key server.key -out server.csr
-# 一路回车到底，过程暂时不需要管
-
-# 4.生成类型为X509的自签名证书。有效期设置3650天，即有效期为10年
-[root@localhost ~]# openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
-
-# 5.复制文件到相应的位置
-[root@localhost ~]# cp server.crt /etc/pki/tls/certs/
-[root@localhost ~]# cp server.key /etc/pki/tls/private/     
-[root@localhost ~]# cp server.csr /etc/pki/tls/private/
-
-# 6.修改配置文件，指定我们自己的证书文件路径
-[root@localhost ~]# vim /etc/httpd/conf.d/ssl.conf
-SSLCertificateFile /etc/pki/tls/certs/server.crt
-SSLCertificateKeyFile /etc/pki/tls/private/server.key
-
-# 7.重启httpd
-[root@node1 ~]# systemctl restart httpd   
-```
-
-二、检查443端口是否开放
-
-```bash
-[root@localhost ~]# ss -nlt
-State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port Process
-LISTEN  0       128            0.0.0.0:22          0.0.0.0:*
-LISTEN  0       511                  *:443               *:*
-LISTEN  0       511                  *:80                *:*
-LISTEN  0       128               [::]:22             [::]:*
-```
-
-三、https访问测试
-
-可以使用curl命令查看证书，可以看到我们的证书是一个自签名证书
-
-```bash
-[root@localhost ~]# curl -kv https://127.0.0.1
-#k表示支持https
-#v表示显示详细的信息
-.....
-SSL certificate verify result: self-signed certificate (18), continuing anyway.
-.....
-```
-
-Windows访问测试
-
-![image-20250118224232388](Apache/image-20250118224232388.png)
+- SSL是基于IP地址实现,单IP的httpd主机，仅可以使用一个https虚拟主机
+- 实现多个虚拟主机站点，apache不能支持，nginx支持
+- SSL实现过程
+   - 客户端发送可供选择的加密方式，并向服务器请求证书
+   - 服务器端发送证书以及选定的加密方式给客户端
+   - 客户端取得证书并进行证书验证，如果信任给其发证书的CA
+   - 验证证书来源的合法性；用CA的公钥解密证书上数字签名
+   - 验证证书内容的合法性：完整性验证
+   - 检查证书的有效期限
+   - 检查证书是否被吊销
+   - 证书中拥有者的名字，与访问的目标主机要一致
+- 客户端生成临时会话密钥（对称密钥），并使用服务器端的公钥加密此数据发送给服务器，完成密钥交换
+- 服务用此密钥加密用户请求的资源，响应给客户端
 
 ## HTTPS请求过程
 
 Web网站的登录页面都是使用https加密传输的，加密数据以保障数据的安全，HTTPS能够加密信息，以免敏感信息被第三方获取,所以很多银行网站或电子邮箱等等安全级别较高的服务都会采用HTTPS协议，HTTPS其实是有两部分组成: HTTP + SSL/ TLS,也就是在HTTP上又加了一层处理加密信息的模块。服务端和客户端的信息传输都会通过TLS进行加密，所以传输的数据都是加密后的数据。
 
-![img](Apache/M3HekoB0Z7ZfRVpa.png!thumbnail)
+![img-HTTPS请求过程](Apache/HTTPS请求过程.png)
 
 https 实现过程如下：
 
@@ -1331,275 +1161,163 @@ https 实现过程如下：
    - 客户端使用预先内置的受信任根证书颁发机构(CA)公钥,验证服务器证书的合法性。
    - 这确保连接的服务器是真实的,而不是中间人攻击者伪造的。
 
+## 案例分析
 
-
-# URL重定向
-
-* URL重定向，即将httpd 请求的URL转发至另一个的URL
-* 重定向指令
+自建 HTTPS 服务器：自签名证书生成、Apache 配置、​强制 HTTP 跳转 HTTPS及测试验证
 
 ```shell
-# httpd.conf 文件中的配置
-Redirect [status] /old-url /new-url
+[root@localhost ~]# mkdir -pv /data/site10/
+[root@localhost ~]# echo "This is NO.10 website!" > /data/site10/index.html
+# 安装 mod_ssl 模块和 openssl 工具
+[root@localhost ~]# yum install mod_ssl openssl -y
+# 确认 httpd 已经加载 ssl_module 模块
+[root@localhost ~]# httpd -M | grep ssl
+ssl_module (shared)
+# 备份默认 ssl.conf 文件避免互相影响
+[root@localhost ~]# mv /etc/httpd/conf.d/ssl.conf{,.bak}
+[root@localhost ~]# grep -nr 'ssl' /etc/httpd/conf.modules.d/*
+/etc/httpd/conf.modules.d/00-ssl.conf:1:LoadModule ssl_module modules/mod_ssl.so
+# 创建 X509 自签名证书
+[root@localhost ~]# openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+   -keyout /etc/httpd/ssl/server.key \
+   -out /etc/httpd/ssl/server.crt \
+   -subj "/C=XX/ST=Test/O=DevEnv/CN=ssl.eagleslabtest.com" \
+   -addext "subjectAltName=DNS:ssl.eagleslabtest.com,IP:172.16.175.129"
+
+# HTTPS 相关虚拟主机配置
+[root@localhost ~]# cat << EOF > /etc/httpd/conf.d/site10.conf
+# ​​强制 HTTP 跳转 HTTPS
+<VirtualHost 172.16.175.129:80>
+   ServerName ssl.eagleslabtest.com
+   RewriteEngine On
+   RewriteCond %{HTTPS} off
+   RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+
+Listen 443 https
+<VirtualHost 172.16.175.129:443>
+   ServerName ssl.eagleslabtest.com
+   DocumentRoot /data/site10/
+   <Directory /data/site10/>
+      Require all granted
+   </Directory>
+   SSLEngine on
+   SSLCertificateFile /etc/httpd/ssl/server.crt
+   SSLCertificateKeyFile /etc/httpd/ssl/server.key
+
+   # 安全增强配置（可选但推荐）
+   # 禁用旧协议
+   SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+   # 强加密套件
+   SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
+</VirtualHost>
+EOF
+
+[root@localhost ~]# systemctl restart httpd
+[root@localhost ~]# echo "172.16.175.129 ssl.eagleslabtest.com" >> /etc/hosts
+# 测试验证: -k 忽略证书警告测试
+[root@localhost ~]# curl -k https://ssl.eagleslabtest.com/index.html
+This is NO.10 website!
+# 测试验证: 强制跳转
+[root@localhost ~]#  curl -k -L http://ssl.eagleslabtest.com/index.html
+This is NO.10 website!
 ```
 
-* status状态
-  * permanent： 返回永久重定向状态码 301
-  * temp：返回临时重定向状态码302. 此为默认值
+一、通过openssl工具来自己生成一个证书，然后颁发给自己
 
-**文档演示：**
+```shell
+# 1. 安装mod_ssl和openssl
+[root@localhost ~]# yum install mod_ssl openssl -y
 
-1. 假设您有一个旧网站 `www.example.com`，需要将其重定向到新网站 `www.newexample.com`。可以在 Apache 的配置文件中添加以下内容来实现这个重定向:
+# 2.生成2048位的加密私钥
+[root@localhost ~]# openssl genrsa -out server.key 2048
+
+# 3.生成证书签名请求（CSR）
+[root@localhost ~]# openssl req -new -key server.key -out server.csr
+# 一路回车到底，过程暂时不需要管
+
+# 4.生成类型为X509的自签名证书。有效期设置3650天，即有效期为10年
+[root@localhost ~]# openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+
+# 5.复制文件到相应的位置
+[root@localhost ~]# cp server.crt /etc/pki/tls/certs/
+[root@localhost ~]# cp server.key /etc/pki/tls/private/     
+[root@localhost ~]# cp server.csr /etc/pki/tls/private/
+
+# 6.修改配置文件，指定我们自己的证书文件路径
+[root@localhost ~]# vim /etc/httpd/conf.d/ssl.conf
+SSLCertificateFile /etc/pki/tls/certs/server.crt
+SSLCertificateKeyFile /etc/pki/tls/private/server.key
+
+# 7.重启httpd
+[root@node1 ~]# systemctl restart httpd   
+```
+
+二、检查443端口是否开放
 
 ```bash
-<Virtualhost *:80>
-      ServerName www.example.com
-      Redirect permanent / https://www.newexample.com/
-</Virtualhost>
-
-<Virtualhost *:443>
-      ServerName www.example.com
-      Redirect permanent / https://www.newexample.com/
-</Virtualhost>
+[root@localhost ~]# ss -nlt
+State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port Process
+LISTEN  0       128            0.0.0.0:22          0.0.0.0:*
+LISTEN  0       511                  *:443               *:*
+LISTEN  0       511                  *:80                *:*
+LISTEN  0       128               [::]:22             [::]:*
 ```
 
-这个配置会对两种情况进行重定向:
+三、https访问测试
 
-1. 当用户访问 `http://www.example.com` 时,会被永久重定向(301 Moved Permanently)到 `https://www.newexample.com/`。
-2. 当用户访问 `https://www.example.com` 时,也会被永久重定向到 `https://www.newexample.com/`。
-
-可以根据需要调整重定向的 HTTP 状态码和目标 URL 路径。常见的重定向状态码有:
-
-- `301 Moved Permanently`: 永久重定向
-- `302 Found`: 临时重定向
-- `307 Temporary Redirect`: 临时重定向(保留请求方法)
-
-除了使用 `Redirect` 指令,也可以使用 `RedirectMatch` 指令来基于正则表达式进行更复杂的重定向规则。例如:
+可以使用curl命令查看证书，可以看到我们的证书是一个自签名证书
 
 ```bash
-RedirectMatch 301 ^/old-page\.html$ https://www.newexample.com/new-page
+[root@localhost ~]# curl -kv https://127.0.0.1
+#k表示支持https
+#v表示显示详细的信息
+.....
+SSL certificate verify result: self-signed certificate (18), continuing anyway.
+.....
 ```
 
-这将把 `/old-page.html` 重定向到 `https://www.newexample.com/new-page`
+Windows访问测试
 
-# MPM多路处理模块
+![image-20250118224232388](Apache/image-20250118224232388.png)
 
-httpd 支持三种MPM工作模式：prefork, worker, event
 
-- MPM工作模式
-  - prefork：多进程I/O模型，一个主进程，管理多个子进程，一个子进程处理一个请求。
-  - worker：复用的多进程I/O模型，多进程多线程，一个主进程，管理多个子进程，一个子进程管理多个线程，每个 线程处理一个请求。
-  - event：事件驱动模型，一个主进程，管理多个子进程，每个子进程创建多个线程，一个线程处理多个请求。
-- 查看RockyLinux 9中默认的mpm，是event
+# MPM 多路处理模块
+
+httpd 支持三种 MPM 工作模式：prefork, worker, event
+
+**相关配置文件**
 
 ```shell
 [root@localhost ~]# cat /etc/httpd/conf.modules.d/00-mpm.conf |grep mpm
-#LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
-#LoadModule mpm_worker_module modules/mod_mpm_worker.so
+# LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
+# LoadModule mpm_worker_module modules/mod_mpm_worker.so
 LoadModule mpm_event_module modules/mod_mpm_event.so
 ```
 
-- 查看进程
-
-```shell
-[root@localhost ~]# ps aux | grep httpd
-root       7116  0.0  0.2 224072  5016 ?        Ss   10:39   0:00 /usr/sbin/httpd -DFOREGROUND
-apache     7124  0.0  0.1 224072  2960 ?        S    10:39   0:00 /usr/sbin/httpd -DFOREGROUND
-......
-[root@localhost ~]# pstree -p 7116
-httpd(7116)─┬─httpd(7124)
-            ├─httpd(7125)
-            ├─httpd(7126)
-            ├─httpd(7127)
-            └─httpd(7128)
-```
-
-- 修改MPM工作模式为`mod_mpm_worker.so`
-
-```shell
-[root@localhost ~]# cat /etc/httpd/conf.modules.d/00-mpm.conf |grep mpm
-#LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
-LoadModule mpm_worker_module modules/mod_mpm_worker.so
-#LoadModule mpm_event_module modules/mod_mpm_event.so
-[root@localhost ~]# systemctl restart httpd
-[root@localhost ~]# ps aux |grep httpd
-root       7231  0.2  0.2 224276  5224 ?        Ss   10:52   0:00 /usr/sbin/httpd -DFOREGROUND
-apache     7232  0.0  0.1 224024  2928 ?        S    10:52   0:00 /usr/sbin/httpd -DFOREGROUND
-apache     7233  0.0  0.3 576640  7560 ?        Sl   10:52   0:00 /usr/sbin/httpd -DFOREGROUND
-apache     7234  0.0  0.3 511104  7564 ?        Sl   10:52   0:00 /usr/sbin/httpd -DFOREGROUND
-apache     7235  0.0  0.3 576640  7568 ?        Sl   10:52   0:00 /usr/sbin/httpd -DFOREGROUND
-root       7318  0.0  0.0 112724   984 pts/0    S+   10:52   0:00 grep --color=auto httpd
-[root@localhost ~]# pstree -p 7231
-httpd(7231)─┬─httpd(7232)
-            ├─httpd(7233)─┬─{httpd}(7241)
-            │             ├─{httpd}(7259)
-            │             ├─{httpd}(7261)
-            │             ├─{httpd}(7263)
-            │             ├─{httpd}(7265)
-            │             ├─{httpd}(7267)
-```
-
-## prefork模式
-
-![img](Apache/prefork模式.png)
+## prefork 模式
 
 Prefork MPM，这种模式采用的是预派生子进程方式，用单独的子进程来处理请求，子进程间互相独立，互不影响，大大的提高了稳定性，但每个进程都会占用内存，所以消耗系统资源过高。
 
-Prefork MPM 工作原理：控制进程Master首先会生成“StartServers”个进程，“StartServers”可以在Apache主配置文件里配置，然后为了满足“MinSpareServers”设置的最小空闲进程个数，会建立一个空闲进程，等待一秒钟，继续创建两个空闲进程，再等待一秒钟，继续创建四个空闲进程，以此类推，会不断的递归增长创建进程，最大同时创建32个空闲进程，直到满足“MinSpareServers”设置的空闲进程个数为止。Apache的预派生模式不必在请求到来的时候创建进程，这样会减小系统开销以增加性能，不过Prefork MPM是基于多进程的模式工作的，每个进程都会占用内存，这样资源消耗也较高。
+![img](Apache/prefork模式.png)
 
-- 将apache切换到prefork的模式下，可以通过`httpd -V`来查看
+## worker 模式
 
-```shell
-[root@localhost ~]# httpd -V
-Server version: Apache/2.4.6 (CentOS)
-Server built:   Nov 16 2020 16:18:20
-Server's Module Magic Number: 20120211:24
-Server loaded:  APR 1.4.8, APR-UTIL 1.5.2
-Compiled using: APR 1.4.8, APR-UTIL 1.5.2
-Architecture:   64-bit
-Server MPM:     prefork
-  threaded:     no
-    forked:     yes (variable process count)
-```
-
-- 通过调整配置文件，可以修改prefork的参数
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/mpm.conf
-StartServers 5              #开始访问进程
-MinSpareServers 5           #最小空闲进程
-MaxSpareServers 10           #无人访问时，留下空闲的进程
-ServerLimit 256               #最多进程数,最大值 20000
-MaxRequestWorkers 256         #最大的并发连接数，默认256
-MaxConnectionsPerChild 4000    
-#子进程最多能处理的请求数量。在处理MaxRequestsPerChild 个请求之后,子进程将会被父进程终止，这时候子进程占用的内存就会释放(为0时永远不释放）
-MaxRequestsPerChild 4000
-#从 httpd.2.3.9开始被MaxConnectionsPerChild代替
-[root@localhost ~]# systemctl restart httpd
-```
-
-- 查看进程数
-
-```shell
-[root@localhost ~]# pstree -p 7606
-httpd(7606)─┬─httpd(7607)
-            ├─httpd(7608)
-            ├─httpd(7609)
-            ├─httpd(7610)
-            └─httpd(7611)
-```
-
-- 修改prefork参数
-
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/mpm.conf
-StartServers 10
-MaxSpareServers 15
-MinSpareServers 10
-MaxRequestWorkers 256
-MaxRequestsPerChild 4000
-[root@localhost ~]# systemctl restart httpd
-```
-
-- 查看是否生效
-
-```shell
-[root@localhost ~]# pstree -p 7628
-httpd(7628)─┬─httpd(7629)
-            ├─httpd(7630)
-            ├─httpd(7631)
-            ├─httpd(7632)
-            ├─httpd(7633)
-            ├─httpd(7634)
-            ├─httpd(7635)
-            ├─httpd(7636)
-            ├─httpd(7637)
-            └─httpd(7638)
-```
-
-- 使用ab进行压力测试
-
-```shell
-[root@localhost ~]# ab -c 1000 -n 1000000 http://127.0.0.1/
-# -c	即concurrency，用于指定的并发数
-# -n	即requests，用于指定压力测试总共的执行次数
-```
-
-- 测试过程中，可以看到最大进程数
-
-```shell
-[root@localhost ~]# ps aux |grep httpd |wc -l
-258
-```
-
-- 结束ab的压力测试，等待一段时间，可以看到进程数慢慢减少
-
-```shell
-[root@localhost ~]# ps aux |grep httpd |wc -l
-12
-```
-
-## worker模式
+Worker MPM 是Apche 2.0 版本中全新的支持多进程多线程混合模型的 MPM，由于使用线程来处理 HTTP 请求，所以效率非常高，而对系统的开销也相对较低，Worker MPM 也是基于多进程的，但是每个进程会生成多个线程，由线程来处理请求，这样可以保证多线程可以获得进程的稳定性。
 
 ![img](Apache/worker工作模式.png)
 
-Worker MPM是Apche 2.0版本中全新的支持多进程多线程混合模型的MPM，由于使用线程来处理HTTP请求，所以效率非常高，而对系统的开销也相对较低，Worker MPM也是基于多进程的，但是每个进程会生成多个线程，由线程来处理请求，这样可以保证多线程可以获得进程的稳定性；
+## event 模式
 
-Worker MPM工作原理： 控制进程Master在最初会建立“StartServers”个进程，然后每个进程会创建“ThreadPerChild”个线程，多线程共享该进程内的资源，同时每个线程独立的处理HTTP请求，为了不在请求到来的时候创建线程，Worker MPM也可以设置最大最小空闲线程，Worker MPM模式下同时处理的请求=ThreadPerChild*进程数，也就是MaxClients，如果服务负载较高，当前进程数不满足需求，Master控制进程会fork新的进程，最大进程数不能超过ServerLimit数，如果需要，可以调整这些对应的参数，比如，如果要调整StartServers的数量，则也要调整 ServerLimit的值
+这个是 Apache 中最新的模式，在现在版本里的已经是稳定可用的模式。它和 worker 模式很像，最大的区别在于，它解决了 keepalive 场景下 ，长期被占用的线程的资源浪费问题（某些线程因为被keep-alive，挂在那里等待，中间几乎没有请求过来，一直等到超时）。
 
-- 修改mpm文件为官方提供的默认数值，然后切换模式到worker模式
+event MPM 中，会有一个专门的线程来管理这些 keepalive 类型的线程，当有真实请求过来的时候，将请求传递给服务线程，执行完毕后，又允许它释放。这样，一个线程就能处理多个请求，实现了异步非阻塞。
 
-```shell
-[root@localhost ~]# vim /etc/httpd/conf.d/mpm.conf
-ServerLimit         16
-StartServers         2
-MaxRequestWorkers  150
-MinSpareThreads     25
-MaxSpareThreads     75
-ThreadsPerChild     25
-[root@localhost ~]# cat /etc/httpd/conf.modules.d/00-mpm.conf |grep mpm
-#LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
-LoadModule mpm_worker_module modules/mod_mpm_worker.so
-#LoadModule mpm_event_module modules/mod_mpm_event.so
-[root@localhost ~]# systemctl restart httpd
-[root@localhost ~]# httpd -V
-Server version: Apache/2.4.6 (CentOS)
-Server built:   Nov 16 2020 16:18:20
-Server's Module Magic Number: 20120211:24
-Server loaded:  APR 1.4.8, APR-UTIL 1.5.2
-Compiled using: APR 1.4.8, APR-UTIL 1.5.2
-Architecture:   64-bit
-Server MPM:     worker
-  threaded:     yes (fixed thread count)
-    forked:     yes (variable process count)
-```
-
-* 查看压力测试前后的进程数，查看线程数
-
-```shell
-[root@localhost ~]# ps aux |grep httpd |wc -l
-5
-[root@localhost ~]# pstree -p 8615 | wc -l
-53
-[root@localhost ~]# ab -c 1000 -n 1000000 http://127.0.0.1/
-[root@localhost ~]# ps aux |grep httpd |wc -l
-9
-[root@localhost ~]# pstree -p 8393 | wc -l
-157
-```
-
-## event模式
+event MPM 在遇到某些不兼容的模块时会失效，将会回退到 worker 模式，一个工作线程处理一个请求。官方自带的模块，全部是支持event MPM的。
 
 ![img](Apache/event工作模式.png)
 
-这个是 Apache中最新的模式，在现在版本里的已经是稳定可用的模式。它和 worker模式很像，最大的区别在于，它解决了 keep-alive 场景下 ，长期被占用的线程的资源浪费问题（某些线程因为被keep-alive，挂在那里等待，中间几乎没有请求过来，一直等到超时）。
-
-event MPM中，会有一个专门的线程来管理这些 keep-alive 类型的线程，当有真实请求过来的时候，将请求传递给服务线程，执行完毕后，又允许它释放。这样，一个线程就能处理几个请求了，实现了异步非阻塞。
-
-event MPM在遇到某些不兼容的模块时，会失效，将会回退到worker模式，一个工作线程处理一个请求。官方自带的模块，全部是支持event MPM的。
-
-
-# LAMP架构部署
+# LAMP架构
 
 LAMP就是由Linux+Apache+MySQL+PHP组合起来的架构
 
@@ -1754,7 +1472,7 @@ Jan 18 21:54:09 localhost.localdomain systemd[1]: Started The PHP FastCGI Proces
 
 <img src="Apache/image-20240719231744450.png" alt="image-20240719231744450" style="zoom:80%;" />
 
-# 部署typecho个人博客
+# 个人博客
 
 ## 源码获取
 
