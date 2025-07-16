@@ -107,5 +107,3 @@
   - [09.调度器](Kubernetes/调度器.md)
   - [10.安全认证](Kubernetes/安全认证.md)
   - [11.DashBoard](Kubernetes/DashBoard.md)
-
-<!-- - [KVM](KVM虚拟化/KVM虚拟化技术.md) -->
