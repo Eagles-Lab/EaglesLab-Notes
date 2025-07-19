@@ -440,7 +440,7 @@ vim /etc/fstab
 
 `autofs` 的主要配置分为 **主配置文件** 和 **挂载映射文件**。
 
-### **主配置文件 `/etc/auto.master`**
+### **主配置文件 **
 
 `/etc/auto.master` 是 `autofs` 的主配置文件，用于定义挂载点及其对应的映射文件。
 
