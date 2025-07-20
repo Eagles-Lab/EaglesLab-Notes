@@ -103,7 +103,6 @@ Windows计算机网络管理模式：
 
 ```bash
 [root@localhost ~]# yum -y install samba
-[root@localhost ~]# yum -y install samba-client
 [root@localhost ~]# systemctl enable --now smb
 [root@localhost ~]# systemctl enable --now nmb
 [root@localhost ~]# ss -nlt
@@ -149,14 +148,7 @@ Added user smbuser.
 Enabled user smbuser.
 ```
 
-三、添加用户到指定组
-
-```bash
-[root@localhost ~]# groupadd smbgroup
-[root@localhost ~]# usermod -aG smbgroup smbuser
-```
-
-四、其他操作(视具体情况而使用)
+三、其他操作(视具体情况而使用)
 
 * 如果已经存在，想修改密码
 
@@ -194,7 +186,7 @@ Enabled user smbuser.
 
 ```bash
 [root@localhost ~]# mkdir -p /data/samba
-[root@localhost ~]# chown -R smbuser:smbgroup /data/samba
+[root@localhost ~]# chown -R smbuser:smbuser /data/samba
 [root@localhost ~]# chmod -R 2770 /data/samba
 ```
 
@@ -207,7 +199,7 @@ Enabled user smbuser.
    path = /data/samba
    browseable = yes
    writable = yes
-   valid users = @smbgroup
+   valid users = @smbuser
    create mask = 0660
    directory mask = 2770
 ```
