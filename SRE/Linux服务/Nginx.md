@@ -1,348 +1,96 @@
-# Nginx介绍
+# Nginx 介绍
 
 Nginx：engine X ，2002年开始开发，2004年开源，2019年3⽉11⽇，Nginx公司被F5 Networks以6.7亿美元收购。
 
 Nginx 则是免费的、开源的、⾼性能的HTTP和反向代理服务器、邮件代理服务器、以及TCP/UDP代理服务器 解决[C10K问题](https://www.ideawu.net/blog/archives/740.html)（10K Connections）
 
-**Nginx官网：**[http://nginx.org](http://nginx.org/)
+**Nginx官网：** http://nginx.org/
 
-**Nginx 商业版为Nginx Plus：**https://www.nginx.com/products/nginx/
+**Nginx 商业版为 Nginx Plus：** https://www.nginx.com/products/nginx/
 
-**Nginx的其它的⼆次发行版：**
+**Nginx ⼆次发行版：**
 
-- Tengine：由淘宝⽹发起的Web服务器项⽬。它在Nginx的基础上，针对⼤访问量⽹站的需求，添加了很多⾼级功能和特性。Tengine的性能和稳定性已经在⼤型的⽹站如淘宝⽹，天猫商城等得到了很好的检验。它的最终⽬标是打造⼀个⾼效、稳定、安全、易⽤的Web平台，从2011年12⽉开始，Tengine成为⼀个开源项⽬，官⽹http://tengine.taobao.org/
-- OpenResty：基于 Nginx 与 Lua 语⾔的⾼性能 Web 平台， 章亦春团队开发，官⽹：http://openresty.org/cn/
+- Tengine：由淘宝⽹发起的Web服务器项⽬。它在Nginx的基础上，针对⼤访问量⽹站的需求，添加了很多⾼级功能和特性。Tengine的性能和稳定性已经在⼤型的⽹站如淘宝⽹，天猫商城等得到了很好的检验。它的最终⽬标是打造⼀个⾼效、稳定、安全、易⽤的Web平台，从2011年12⽉开始，Tengine成为⼀个开源项⽬，官⽹ http://tengine.taobao.org/
+- OpenResty：基于 Nginx 与 Lua 语⾔的⾼性能 Web 平台， 章亦春团队开发，官⽹ http://openresty.org/cn/
 
-## Nginx所具备的功能
+## Nginx 所具备的功能
 
-- 静态的web资源服务器html，图⽚，js，css，txt等静态资源
-- 结合FastCGI/uWSGI/SCGI等协议反向代理动态资源请求
-- http/https协议的反向代理
-- imap4/pop3协议的反向代理
-- tcp/udp协议的请求转发（反向代理）
-
-### web服务相关的功能支持
-
-- 虚拟主机（server）
-- ⽀持 keep-alive 和管道连接(利用⼀个连接做多次请求)
-- 访问⽇志（⽀持基于⽇志缓冲提⾼其性能）
-- url rewirte
-- 路径别名
-- 基于IP及用户的访问控制
-- ⽀持速率限制及并发数限制
-- 重新配置和在线升级而无需中断客⼾的⼯作进程
+- 静态的web资源服务器 html，image，js，css，txt 等静态资源
+- 结合 FastCGI/uWSGI/SCGI 等协议反向代理动态资源请求
+- http/https 协议的反向代理
+- imap4/pop3 协议的反向代理
+- tcp/udp 协议的反向代理
 
 ## 基本特征
 
 - 模块化设计，较好的扩展性
-- ⾼可靠性 远远超过apache
+- ⾼可靠性高性能高于 apache
 - ⽀持热部署：不停机更新配置⽂件，升级版本，更换⽇志⽂件
-- 低内存消耗：10000个keep-alive连接模式下的⾮活动连接，仅需2.5M内存
-- event-driven,aio,mmap（内存映射），sendfile
-
-# Nginx架构和进程结构
-
-## Nginx架构
-
-简单来讲，Nginx采用了master-worker架构，由master进程负责通信和调度，woker进程响应具体的请求
-
-<img src="Nginx/image-20240715200210862.png" alt="image-20240715200210862" style="zoom:80%;" />
-
-## Nginx进程结构
-
-**常见web请求处理机制**
-
-- 多进程方式:服务器每接收到一个客户端请求就有服务器的主进程生成一个子进程响应客户端，直到用户关闭连接，这样的优势是处理速度快。子进程之间相互独立，但是如果访问过大会导致服务器资源耗尽而无法提供请求。
-- 多线程方式:与多进程方式类似，但是每收到一个客户端请求会有服务进程派生出一个线程来个客户方进行交互，一个线程的开销远远小于一个进程，因此多线程方式在很大程度减轻了web服务器对系统资源的要求，但是多线程也有自己的缺点。即当多个线程位于同一个进程内工作的时候，可以相互访问同样的内存地址空间，所以他们相互影响，一旦主进程挂掉则所有子线程都不能工作了，IIS服务器使用了多线程的方式，需要间隔一段时间就重启一次才能稳定。
-
-**Nginx是多进程组织模型，而且是一个由Master主进程和Worker工作进程组成。**
-
-<img src="Nginx/image-20240715200430183.png" alt="image-20240715200430183" style="zoom:80%;" />
-
-### 主进程(master process)的功能:
-
-- 对外接口:接收外部的操作(信号)
-- 对内转发:根据外部的操作的不同，通过信号管理worker
-- 监控:监控worker进程的运行状态，worker进程异常终止后，自动重启worker进程
-- 读取Nginx配置文件并验证其有效性和正确性
-- 建立、绑定和关闭socket连接
-- 按照配置生成、管理和结束工作进程
-- 接受外界指令，比如重启、升级及退出服务器等指令
-- 不中断服务，实现平滑升级，重启服务并应用新的配置
-- 开启日志文件，获取文件描述符
-- 不中断服务，实现平滑升级，升级失败进行回滚处理
-- 编译和处理perl脚本
-
-### 工作进程(worker process的功能:
-
-- 所有Worker进程都是平等的
-- 实际处理:网络请求，由Worker进程处理
-- Worker进程数量:在nginx.conf 中配置，一般设置为核心数，充分利用CPU资源，同时，避免进程数量过多，避免进程竞争CPU资源，增加
-- 上下文切换的损耗
-- 接受处理客户的请求
-- 将请求依次送入各个功能模块进行处理
-- I/O调用，获取响应数据
-- 与后端服务器通信，接收后端服务器的处理结果
-- 缓存数据，访问缓存索引，查询和调用缓存数据
-- 发送请求结果，响应客户的请求
-- 接收主程序指令，比如重启、升级和退出等
-
-**如下图所示：**
-
-<img src="Nginx/image-20240715200658649.png" alt="image-20240715200658649" style="zoom:80%;" />
-
-**Master-Worker进程工作细节：**
-
-<img src="Nginx/image-20240715200727069.png" alt="image-20240715200727069" style="zoom:80%;" />
-
-## Nginx进程间通信
-
-工作进程是由主进程生成的，主进程由root启用，主进程使用fork()函数，在Nginx服务器启动过程中主进程根据配置文件决定启动工作进程的数量，然后建立一张全局的工作表用于存放当前未退出的所有的工作进程，主进程生成工作进程后会将新生成的工作进程加入到工作进程表中，并建立一个单向的管道并将其传递给工作进程，该管道与普通的管道不同，它是由主进程指向工作进程的单项通道，包含了主进程向工作进程发出的指令、工作进程ID、工作进程在工作进程表中的索引和必要的文件描述符等信息，单向管道，工作进程只能监听内容之后读取指令。主进程与外界通过信号机制进行通信，当接收到需要处理的信号时，它通过管道向相关的工作进程发送正确的指令，每个工作进程都有能力捕获管道中的可读事件，当管道中有可读事件的时候，工作进程就会从管道中读取并解析指令，然后采取相应的执行动作，这样就完成了主进程与工作进程的交互。
-
-工作进程之间的通信原理基本上和主进程与工作进程之间的通信是一样的，只要工作进程之间能够取得彼此的信息，建立管道即可通信，但是由于工作进程之间是完全隔离的，因此一个进程想要知道另外一个进程的状态信息就只能通过主进程来设置了。
-
-为了实现工作进程之间的交互，主进程在生成工作进程之后，在工作进程表中进行遍历，将该新进程的ID以及针对该进程建立的管道句柄传递给工作进程中的其他进程，为工作进程之间的通信做准备，当工作进程1向工作进程2发送指令的时候，首先在主进程给它的其他工作进程工作信息中找到2的进程ID，然后将正确的指令写入指向进程2的管道，工作进程2捕获到管道中的事件后，解析指令并进行相关操作，这样就完成了工作进程之间的通信。
-
-**如下图所示：**
-
-<img src="Nginx/image-20240715201052972.png" alt="image-20240715201052972" style="zoom:80%;" />
-
-## 连接建立和请求处理过程
-
-- Nginx启动时，Master 进程，加载配置文件
-- Master进程，初始化监听的socket
-- Master进程，fork 出多个Worker进程
-- Worker进程，竞争新的连接，获胜方通过三次握手，建立Socket连接，并处理请求
-
-## HTTP协议处理过程
-
-<img src="Nginx/image-20240715201212370.png" alt="image-20240715201212370" style="zoom:80%;" />
-
-# Nginx模块介绍
-
-**nginx常见模块类型：**
-
-- **核心模块:**是Nginx服务器正常运行必不可少的模块，提供错误日志记录、配置文件解析、事件驱动机制、进程管理等核心功能
-- **标准HTTP模块:**提供HTTP协议解析相关的功能，比如:端口配置、网页编码设置、HTTP响应头设置 等等
-- **可选HTTP模块:**主要用于扩展标准的HTTP功能，让Nginx能处理一些特殊的服务， 比如: Flash 多媒体传输、解析GeolP请求、网络传输压缩、安全协议SSL支持等
-- **邮件服务模块:**主要用于支持Nginx的邮件服务，包括对POP3协议、IMAP 协议和SMTP协议的支持
-- **Stream服务模块:**实现反向代理功能包括TCP协议代理
-- **第三方模块:**是为了扩展Nginx服务器应用，完成开发者自定义功能，比如: Json支持、 Lua 支持等
-
-**部分第三方模块官方文档：**http://nginx.org/en/docs/
+- 低内存消耗：10000个 keep-alive 连接模式下的⾮活动连接，仅需2.5M内存
+- 事件驱动epoll，异步非阻塞IO，内存映射等等特性
 
 
+# Nginx 基础
 
-# Nginx安装和部署
+## 安装部署
 
-Nginx版本分为Mainline version(主要开发版本)、Stable version(当前最新稳定版)、Legacy versions(旧的稳定版)
+Nginx 版本分为 Mainline version（主要开发版本）、Stable version (当前最新稳定版)、Legacy versions (旧的稳定版)
 
-**官方下载地址：**http://nginx.org/en/download.html
+**官方下载地址：** http://nginx.org/en/download.html
 
-对于Nginx的安装，我们常用的方法为**yum在线安装**和**源码包编译安装**
+对于 Nginx 的安装，我们常用的方法为在线安装和源码包编译安装
 
 **其中：**
+- yum 下载的相关文件都是放在默认的位置，简单高效
+- 编译安装可以自定义版本和功能，更适合业务的定制化
 
-- yum下载的相关文件都是放在默认的位置，不方便我们进一步研究。
-- 编译安装可以指定具体的版本，而且更方便自定义相关路径
-- 使用源码编译可以自定义相关功能，更方便业务的上的使用
-
-## YUM部署Nginx
-
-1. 查看当前yum源中Nginx的版本，Base基本库中一般情况下没有nginx安装包，对于Redhat系列发行版，我们需要先安装红帽提供的EPEL扩展软件仓库。
-
-```bash
-[root@localhost ~]# yum install -y epel-release
-[root@localhost ~]# yum info nginx
-Last metadata expiration check: 0:03:49 ago on Thu Feb  6 09:59:28 2025.
-Available Packages
-Name         : nginx
-Epoch        : 2
-Version      : 1.20.1
-Release      : 20.el9.0.1
-Architecture : x86_64
-Size         : 36 k
-Source       : nginx-1.20.1-20.el9.0.1.src.rpm
-Repository   : appstream
-Summary      : A high performance web server and reverse proxy server
-URL          : https://nginx.org
-License      : BSD
-Description  : Nginx is a web server and a reverse proxy server for HTTP, SMTP, POP3 and
-             : IMAP protocols, with a strong focus on high concurrency, performance and low
-             : memory usage.
-[root@localhost ~]# yum -y install nginx
-```
-
-2. 通过systemctl启动nginx服务，并且查看端口号
-
-```bash
-[root@localhost ~]# systemctl start nginx
-[root@localhost ~]# systemctl enable nginx		# enable 开机自启动
-[root@localhost ~]# ss -nlt
-State       Recv-Q Send-Q Local Address:Port               Peer Address:Port   
-LISTEN      0      128         *:80                      *:*
-LISTEN      0      128         *:22                      *:*
-LISTEN      0      100    127.0.0.1:25                      *:*                
-LISTEN      0      128        :::22                     :::*
-LISTEN      0      100       ::1:25                     :::*
-
-# 检查80端口是否启动
-```
-
-3. 访问测试：
-
-   最好是关闭防火墙和selinux后进行
-
-```bash
-[root@localhost ~]# systemctl stop firewalld
-[root@localhost ~]# setenforce 0
-```
-
-​		在浏览器中输入IP地址：192.168.88.10
-
-<img src="Nginx/image-20250206100602278.png" alt="image-20250206100602278" style="zoom:80%;" />
-
-看到上述页面，说明已经成功部署好了nginx 的环境。
-
-## 官方源码编译部署Nginx
-
-官方源码包地址：http://nginx.org/download/
-
-查看官方编译指令：
+**YUM 安装**
 
 ```shell
-[root@localhost ~]# nginx -V
+# 安装
+[root@localhost ~]# yum provides nginx
+[root@localhost ~]# yum install nginx -y
+# 启动
+[root@localhost ~]# systemctl start nginx && systemctl enable nginx
+# 关闭防火墙和SELINUX
+# 测试
+[root@localhost ~]# curl -I 127.0.0.1
+HTTP/1.1 200 OK
+Server: nginx/1.20.1
+
 ```
 
-### 编译
+**编译安装**
 
-通过编译的方式安装nginx前，建议先移除之前yum安装的nginx，防止多个nginx之间相互冲突~
-
-```bash
-[root@localhost ~]# yum remove -y nginx
-```
-
-1. 从官网下载源码包，这里以1.22.0为例：
-
-```bash
+```shell
+# 准备编译环境
+[root@localhost ~]# yum -y install gcc pcre-devel openssl-devel zlib-devel
+# 如果需要编译安装，为避免冲突需要将yum部署的nginx版本先卸载掉！
+# 准备源码包
 [root@localhost ~]# wget http://nginx.org/download/nginx-1.22.0.tar.gz -P /usr/local/src/
-[root@localhost ~]# cd /usr/local/src
-
-# 解压源码包
-[root@localhost src]# tar xzvf nginx-1.22.0.tar.gz
-[root@localhost src]# cd nginx-1.22.0
-```
-
-2. 查看编译帮助
-
-```bash
-[root@localhost nginx-1.22.0]# ./configure --help
-```
-
-3. 开始编译
-
-源码安装需要提前准备标准的编译器，GCC的全称是(GNU Compiler collection)，其有GNU开发,并以GPL即LGPL许可，是自由的类UNIX即苹果电脑Mac OS X操作系统的标准编译器，因为GCC原本只能处理C语言，所以原名为GNU C语言编译器，后来得到快速发展,可以处理C++,Fortran, pascal, objective-C, java以及Ada等其他语言，此外还需要Automake:工具，以完成自动创建Makefile的工作,Nginx的一些模块需要依赖第三方库，比如: pcre (支持rewrite) ，zlib (支持gzip模块) 和openssI (支持ssI模块) 等
-
-```bash
-# 先安装编译环境
-[root@localhost nginx-1.22.0]# yum -y install gcc pcre-devel openssl-devel zlib-devel
-[root@localhost nginx-1.22.0]# useradd -r -s /sbin/nologin nginx
+[root@localhost ~]# cd /usr/local/src && tar xzvf nginx-1.22.0.tar.gz
+# 编译
+[root@localhost ~]# useradd -r -s /sbin/nologin nginx
 [root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
---user=nginx \
---group=nginx \
---with-http_ssl_module \
---with-http_v2_module \
---with-http_realip_module \
---with-http_stub_status_module \
---with-http_gzip_static_module \
---with-pcre \
---with-stream \
---with-stream_ssl_module \
---with-stream_realip_module \
---with-file-aio
+  --user=nginx \
+  --group=nginx \
+  --with-http_ssl_module \
+  --with-http_v2_module \
+  --with-http_realip_module \
+  --with-http_stub_status_module \
+  --with-http_gzip_static_module \
+  --with-pcre \
+  --with-stream \
+  --with-stream_ssl_module \
+  --with-stream_realip_module \
+  --with-file-aio
 [root@localhost nginx-1.22.0]# make -j 2 && make install
-```
-
-4. 善后工作
-
-```bash
+# 善后工作
 [root@localhost nginx-1.22.0]# chown -R nginx.nginx /apps/nginx
-
-# 创建连接文件，使得可以全局使用nginx命令
 [root@localhost nginx-1.22.0]# ln -s /apps/nginx/sbin/nginx /usr/sbin/
 [root@localhost nginx-1.22.0]# nginx -v
-```
-
-- nginx完成安装以后，有四个主要的目录
-  - **conf:** 保存nginx所有的配置文件，其中nginx.conf是nginx服务器的最核心最主要的配置文件，其他的.conf则是用来配置nginx相关的功能的，例如fastcgi功能使用的是fastcgi. conf和fastcgi.params两个文件，配置文件一般都有个样板配置文件，是文件名. default结尾，使用的使用将其复制为并将default去掉即可。
-  - **html:** 目录中保存了nginx服务器的web文件，但是可以更改为其他目录保存web文件，另外还有一个50x的web文件是默认的错误页面提示页面。
-  - **logs:** 用来保存nginx服务器的访问日志错误日志等日志，logs目录可以放在其他路径，比如/var/logs/nginx里面。
-  - **sbin:** 保存nginx二进制启动脚本，可以接受不同的参数以实现不同的功能。
-
-可以使用tree命令查看目录结构：
-
-```bash
-[root@localhost nginx-1.22.0]# tree /apps/nginx
-/apps/nginx
-├── conf
-│   ├── fastcgi.conf
-│   ├── fastcgi.conf.default
-│   ├── fastcgi_params
-│   ├── fastcgi_params.default
-│   ├── koi-utf
-│   ├── koi-win
-│   ├── mime.types
-│   ├── mime.types.default
-│   ├── nginx.conf
-│   ├── nginx.conf.default
-│   ├── scgi_params
-│   ├── scgi_params.default
-│   ├── uwsgi_params
-│   ├── uwsgi_params.default
-│   └── win-utf
-├── html
-│   ├── 50x.html
-│   └── index.html
-├── logs
-└── sbin
-    └── nginx
-```
-
-### 启动和停止Nginx
-
-```bash
-[root@localhost nginx-1.22.0]# nginx 
-[root@localhost nginx]# ss -nlt
-State       Recv-Q      Send-Q            Local Address:Port             Peer Address:Port      Process
-LISTEN      0           128                     0.0.0.0:22                    0.0.0.0:*
-LISTEN      0           511                     0.0.0.0:80                    0.0.0.0:*
-LISTEN      0           128                        [::]:22                       [::]:*
-```
-
-浏览器中访问测试：
-
-防火墙和SElinux不要忘记了~
-
-```bash
-[root@localhost nginx]# systemctl stop firewalld
-[root@localhost nginx]# setenforce 0
-```
-
-<img src="Nginx/image-20250206102715603.png" alt="image-20250206102715603" style="zoom:80%;" />
-
-**停止nginx：**
-
-```bash
-[root@localhost nginx-1.22.0]# nginx -s stop
-```
-
-### 配置Nginx自启动
-
-创建service文件，这样可以把nginx交由systemctl来管理。
-
-```bash
-# 复制同一版本的nginx的yum安装生成的service文件
-[root@localhost ~]# vim /usr/lib/systemd/system/nginx.service
+# systemd管理
+[root@localhost ~]# cat << EOF > /usr/lib/systemd/system/nginx.service
 [Unit]
 Description=The nginx HTTP and reverse proxy server
 Documentation=http://nginx.org/en/docs/
@@ -358,51 +106,118 @@ ExecStop=/bin/kill -s TERM $MAINPID
  
 [Install]
 WantedBy=multi-user.target
-
-
-# 在配置文件中制定进程id存放的文件路径
+EOF
+# 更新nginx.pid存储位置
 [root@localhost ~]# mkdir /apps/nginx/run/
 [root@localhost ~]# vim /apps/nginx/conf/nginx.conf
 pid        /apps/nginx/run/nginx.pid;
+# 启动
+[root@localhost ~]# systemctl start nginx && systemctl enable nginx 
+# 关闭防火墙和SELINUX
+[root@localhost ~]# curl -I 127.0.0.1
+HTTP/1.1 200 OK
+Server: nginx/1.22.0
+
 ```
 
-### 验证Nginx服务自启动
+## nginx 命令
 
-```bash
-[root@localhost ~]# systemctl daemon-reload
-[root@localhost ~]# systemctl enable --now nginx
-[root@localhost ~]# ll /apps/nginx/run
-总用量 4
--rw-r--r--. 1 root root 5 5月  24 10:07 nginx.pid
+nginx 为 Nginx 服务软件的命令
+
+```shell
+[root@localhost ~]# nginx -h
+nginx version: nginx/1.20.1
+Usage: nginx [-?hvVtTq] [-s signal] [-p prefix]
+             [-e filename] [-c filename] [-g directives]
 ```
 
-# Nginx配置详解
+**常用选项**
 
-- nginx官方帮助文档
-  - http://nginx.org/en/docs/
-- tengine帮助文档
-  - http://tengine.taobao.org/documentation.html
-- Nginx的配置文件的组成部分
-  - 主配置文件：nginx.conf
-  - 子配置文件：xxx/conf.d/*.conf
-  - fastcgi, uwsgi, scgi等协议相关的配置文件
-  - mime.types：支持的mime类型，MIME(Multipurpose Internet Mail Extensions)多用途互联网邮件扩展类型，MIME消息能包含文本、图像、音频、视频以及其他应用程序专用的数据，是设定某种扩展名的文件用一种应用程序来打开的方式类型，当该扩展名文件被访问的时候，浏览器会自动使用指定应用程序来打开。多用于指定一些客户端自定义的文件名，以及一-些媒体文件打开方式。
-  - MIME参考文档:https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types
+| 选项 | 说明 |
+| :--- | :--- |
+| -v | 输出版本 |
+| -V | 编译相关选项 |
+| -t | 测试验证配置文件的正确性 |
+| -s <signal> | 发送信号指令给主进程 |
 
-## 主配置文件 nginx.conf
+## 相关文件
 
-nginx的主配置文件中主要由4部分构成
+| 文件 | 说明 |
+| :--- | :--- |
+| /etc/nginx/nginx.conf | 主配置文件 |
+| /var/log/nginx/ | 日志文件目录 |
+| /usr/share/nginx/html/ | 默认站点根目录 |
+| /usr/lib/systemd/system/nginx.service | Systemd服务文件 |
+| /var/run/nginx.pid | 主进程ID文件 |
+| /usr/share/nginx/modules | 动态加载模块目录 |
+| /etc/nginx/conf.d/ | 子配置文件目录 |
 
-```bash
-main block：主配置段，既全局配置段，对http,mail都有效
-# 事件驱动相关的配置
-event {
-  ...
+## 主配置文件
+
+```shell
+[root@localhost ~]# grep -Ev '^$|^#|\s*#' /etc/nginx/nginx.conf
+# 全局配置块
+## 运行用户
+user nginx;
+## 工作进程数
+worker_processes auto;
+## 错误日志
+error_log /var/log/nginx/error.log;
+## pid文件存放位置
+pid /run/nginx.pid;
+## 动态加载模块配置
+include /usr/share/nginx/modules/*.conf;
+# events配置块
+events {
+    # 设置单个工作进程最大并发连接数
+    worker_connections 1024;
 }
-# http/https协议相关配置段
+# http配置块
 http {
-  ...
+    ## 日志格式定义
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    ## 访问日志
+    access_log  /var/log/nginx/access.log  main;
+    ## 启用 sendfile() - 利用操作系统内核的零拷贝技术：即数据拷贝无需切换至用户空间
+    sendfile            on;
+    ## 启用 TCP_NOPUSH - 优化网络包传输：即数据包填满时发送
+    tcp_nopush          on;
+    ## 启用  TCP_NODELAY - 减少延迟：即基于keepalive连接，尽快发送小数据包
+    tcp_nodelay         on;
+    ## keepalive 超时时间
+    keepalive_timeout   65;
+    ## 设置用于存储MIME类型映射的哈希表最大大小
+    types_hash_max_size 4096;
+    ## 定义文件扩展名与MIME类型的映射
+    include             /etc/nginx/mime.types;
+    ## 定义响应包默认MIME类型
+    default_type        application/octet-stream;
+    ## 加载子配置文件
+    include /etc/nginx/conf.d/*.conf;
+    # server配置块
+    server {
+        ## 监听ipv4和ipv6 80端口
+        listen       80;
+        listen       [::]:80;
+        ## 定义虚拟主机的名称-域名
+        server_name  _;
+        ## 根目录
+        root         /usr/share/nginx/html;
+        ## 加载默认站点子配置文件
+        include /etc/nginx/default.d/*.conf;
+        ## 定义错误页
+        error_page 404 /404.html;
+        # location配置块
+        location = /404.html {
+        }
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
 }
+
 # 默认配置文件不包括下面两个块
 # mail协议相关配置段
 mail {
@@ -412,26 +227,308 @@ mail {
 stream {
   ...
 }
-# 导入其他路径的配置文件
-include /apps/nginx/conf.d/*.conf
+
 ```
 
-## 配置文件默认字段及格式说明
+## 相关模块
 
-<img src="Nginx/image-20240715214934896.png" alt="image-20240715214934896" style="zoom:80%;" />
+**常见模块类型**
 
-<img src="Nginx/image-20240715215034229.png" alt="image-20240715215034229"  />
+- **核心模块**：是 Nginx 服务器正常运行必不可少的模块，提供错误日志记录、配置文件解析、事件驱动机制、进程管理等核心功能
+- **标准 HTTP 模块**： 提供 HTTP 协议解析相关的功能，比如：端口配置、网页编码设置、HTTP 响应头设置 等等
+- **可选 HTTP 模块**： 主要用于扩展标准的 HTTP 功能，让 Nginx 能处理一些特殊的服务， 比如：Flash 多媒体传输、解析GeolP 请求、网络传输压缩、安全协议 SSL 支持等
+- **邮件服务模块**： 主要用于支持 Nginx 的邮件服务，包括对 POP3 协议、IMAP 协议和 SMTP 协议的支持
+- **Stream 服务模块**： 实现反向代理功能包括TCP协议代理
+- **第三方模块**： 是为了扩展 Nginx 服务器应用，完成开发者自定义功能，比如: Json 支持、 Lua 支持等
 
-## 全局配置
+**部分第三方模块官方文档：** http://nginx.org/en/docs/
 
-Main全局配置段常见的配置指令分类
+```shell
+# 编译时内置模块
+[root@localhost ~]#  nginx -V 2>&1 | tr ' ' '\n' | grep module
+# 动态加载模块
+/usr/lib64/nginx/modules
+```
 
-- 正常运行必备的配置
-- 优化性能相关的配置
-- 用于调试及定位问题相关的配置
-- 时间驱动相关的配置
+## 案例分析
 
-### CPU性能相关
+- 修改默认网址目录为：`/data/www/html` && 修改 ServerName 为：`test.mysite.com`；修改 Listen 为：`8090`
+- 自定义文件扩展名为 `.text` 的响应包中MIME类型为 `text/my_text`
+- 响应报文 Server 首部不显示 nginx 版本：防止他人根据某个版本的漏洞进行攻击
+
+```shell
+# 待补充
+```
+
+# 虚拟主机
+
+基于不同的IP、不同的端口以及不同的域名实现不同的虚拟主机，依赖于核心模块 ngx_http_ core_module 实现
+
+## 案例分析
+
+- 定义 PC 站点，根目录为 `/data/nginx/site01`，直接通过 `x.x.x.x:8001`
+- 定义 Mobile 站点，根目录为 `/data/nginx/site02`，通过自定义域名访问
+- 定义 Test 站点，根目录为 `/data/nginx/site03`, 仅能通过本地 `127.0.0.1:8003` 访问
+- 定义 Test 站点，访问 `127.0.0.1:8003/status`，根目录为 `/data/nginx`
+
+```shell
+[root@localhost ~]# mkdir -pv /data/nginx/site0{1..3}/
+[root@localhost ~]# mkdir -pv /data/nginx/status
+[root@localhost ~]# echo "Running 3 websites" > /data/nginx/status/index.html
+[root@localhost ~]# echo "Hello PC Website!" > /data/nginx/site01/index.html
+[root@localhost ~]# echo "Hello Moblie Website!" > /data/nginx/site02/index.html
+[root@localhost ~]# echo "Hello Local Test Website!" > /data/nginx/site03/index.html
+[root@localhost ~]# cat << EOF > /etc/nginx/conf.d/vhost.conf
+# PC
+server {
+    listen  8001;
+    location  / {
+        root  /data/nginx/site01;
+    }
+}
+# Mobile
+server {
+    listen 80;
+    server_name m.test.com;
+    location / {
+        root /data/nginx/site02;
+    }
+}
+# Test
+server {
+    listen 127.0.0.1:8003;
+    location / {
+        root /data/nginx/site03;
+    }
+    location /status {
+        root /data/nginx;  
+    }
+}
+EOF
+# 检查配置文件并重新加载
+[root@localhost ~]# nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+[root@localhost ~]# nginx -s reload
+# 测试验证
+[root@localhost ~]# curl 172.16.175.129:8001
+Hello PC Website!
+[root@localhost ~]# curl -H 'Hostname: p.test.com' 172.16.175.129
+Hello Moblie Website!
+[root@localhost ~]# curl 172.16.175.129:8003
+curl: (7) Failed to connect to 172.16.175.129 port 8003: Connection refused
+# 定义 location 时：文件的绝对路径等于 root+location
+[root@localhost ~]# curl -L 127.0.0.1:8003/status
+Running 3 websites
+```
+
+# Location 
+
+Nginx 的 location 指令是配置请求路由的核心机制，其匹配规则基于 ​**​URI**​​ 和​**​修饰符​**​，优先级由匹配类型和顺序共同决定。
+
+## 匹配类型与语法
+
+```shell
+location [ = | ~ | ~* | ^~ ] uri { ... }
+```
+
+| 修饰符 | 匹配类型 | 语法示例 | 说明    |
+| :--- | :--- | :--- | :--- |
+| =        | 精确匹配 | location = /path | 仅当 URI 完全等于 /path 时匹配，优先级最高 |
+| ^~       | 前缀匹配 | location ^~ /images/ | 匹配以 /images/ 开头的 URI，停止后续正则检查  |
+| ~        | 正则匹配 | location ~ \.php$ | 区分大小写，正则表达式匹配，按配置文件顺序匹配 |
+| ~*       | 正则匹配 | location ~* \.(jpg,png)$ | 不区分大小写，正则表达式匹配，按配置文件顺序匹配          |
+| 无修饰符   | 前缀匹配 | location /static/ | 匹配以 /static/ 开头的 URI，需继续正则检查  |
+| /        | 通用匹配 | location / | 匹配所有请求，优先级最低 |
+
+**优先级**：`= ^~ ~/~* 无修饰符 /`
+
+## 案例分析
+
+**官方案例**
+
+```shell
+location = / {
+    [ configuration A ]
+}
+location / {
+    [ configuration B ]
+}
+location /documents/ {
+    [ configuration C ]
+}
+location ^~ /images/ {
+    [ configuration D ]
+}
+location ~* \.(gif|jpg|jpeg)$ {
+    [ configuration E ]
+}
+# \: 转义字符
+```
+
+**测试验证**
+
+- The "`/`" request will match configuration A
+- the "`/index.html`" request will match configuration B
+- the "`/documents/document.html`" request will match configuration C
+- the "`/images/1.gif`" request will match configuration D
+- the "`/documents/1.jpg`" request will match configuration E
+
+
+# 访问控制
+
+Nginx 的访问控制是保障服务器安全的核心机制，通过多种方式精细化管控请求入口
+
+## 基于 IP 访问控制
+
+**典型场景**
+
+```shell
+# 黑名单：默认允许，拒绝特定IP
+location /admin {
+    deny 192.168.1.100;  # 拒绝单个 IP
+    deny 10.0.0.0/8;     # 拒绝网段
+    allow all;           # 允许其他 IP
+}
+
+# 白名单：默认拒绝，允许可信IP
+location /api {
+    allow 192.168.1.0/24;  # 允许网段
+    allow 172.16.1.1;      # 允许单个 IP
+    deny all;              # 拒绝其他
+}
+
+```
+
+## 基于 HTTP 认证的访问控制
+
+**典型场景**
+
+```shell
+# 生成密码文件
+## 首次创建
+htpasswd -c /etc/nginx/.htpasswd admin
+## 追加用户
+htpasswd -c /etc/nginx/.htpasswd root
+
+# 后台管理
+location /admin {
+    auth_basic "Tip: input password!";                 # 认证提示语
+    auth_basic_user_file /etc/nginx/.htpasswd;   # 密码文件路径
+}
+
+```
+
+## 案例分析
+
+仅能够通过 admin 用户本地访问后台管理，其他所有IP和用户均不允许
+
+```shell
+# 准备实验环境
+[root@localhost ~]# htpasswd -c /etc/nginx/.htpasswd admin
+New password:
+Re-type new password:
+Adding password for user admin
+[root@localhost ~]# mkdir -pv /data/nginx/site04/admin
+[root@localhost ~]# echo "site04" > /data/nginx/site04/admin/index.html
+[root@localhost ~]# cat << EOF > /etc/nginx/conf.d/site04.conf
+server {
+    listen  8004;
+    if ($http_user_agent ~* bot) {
+        return 403;
+    }
+    location  /admin {
+        root  /data/nginx/site04;
+        auth_basic "Tip: input password!";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        allow 127.0.0.1;
+        deny all;
+    }
+}
+EOF
+[root@localhost ~]# nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+[root@localhost ~]# nginx -s reload
+# 测试验证
+client01 ~ % curl -I 172.16.175.129:8004/admin
+HTTP/1.1 403 Forbidden
+[root@localhost ~]# curl -u admin:123 http://127.0.0.1:8004/admin/
+site04
+[root@localhost ~]# curl -I -u root:123 http://127.0.0.1:8004/admin/
+HTTP/1.1 401 Unauthorized
+## 模拟 bot 访问
+[root@localhost ~]# curl -I -u root:123 -H 'User-agent: bot' http://127.0.0.1:8004/admin/
+HTTP/1.1 403 Forbidden
+```
+
+
+# Nginx 架构和进程
+
+## Nginx 架构
+
+Nginx 采用了 master-worker 架构，由 master 进程负责通信和调度，worker 进程响应具体的请求
+
+<img src="Nginx/Nginx架构.png" alt="image-Nginx架构" style="zoom:80%;" />
+
+## Nginx 进程模型
+
+Nginx 的进程模型是其高性能和高并发的核心，采用​​多进程架构​​（默认模式），主要由 ​​Master 进程​​和多个 ​​Worker 进程​​组成，结合​**​异步非阻塞 I/O 模型​**​实现高效请求处理
+
+<img src="Nginx/Nginx进程模型.png" alt="image-Nginx进程模型" style="zoom:80%;" />
+
+**Master 进程:**
+
+- 对外接口：接收外部的操作(信号)
+- 对内转发：根据外部的操作的不同，通过信号管理 worker
+- 监控：监控 worker 进程的运行状态，worker 进程异常终止后，自动重启 worker 进程
+- 配置加载：读取 Nginx 配置文件并验证其有效性和正确性
+- 管理连接：建立、绑定和关闭 socket 连接
+- 按照配置生成、管理和结束工作进程
+- 接受外界指令，比如重启、升级及退出服务器等指令
+- 不中断服务，实现平滑升级，重启服务并应用新的配置
+- 开启日志文件，获取文件描述符
+- 不中断服务，实现平滑升级，升级失败进行回滚处理
+
+**Worker 进程:**
+
+- 所有 Worker 进程都是平等的，接受处理客户的请求
+- 实际处理：网络请求，由 Worker 进程处理
+- Worker进程数量：在nginx.conf 中配置，一般设置为核心数，充分利用 CPU 资源，同时，避免进程数量过多，避免进程竞争 CPU 资源，增加上下文切换的损耗。
+- 将请求依次送入各个功能模块进行处理
+- I/O调用，获取响应数据
+- 与后端服务器通信，接收后端服务器的处理结果
+- 缓存数据，访问缓存索引，查询和调用缓存数据
+- 发送请求结果，响应客户的请求
+- 接收主程序指令，比如重启、升级和退出等
+
+**工作细节**
+
+<img src="Nginx/Nginx进程模型工作细节01.png" alt="image-Nginx进程模型工作细节01" style="zoom:80%;" />
+
+<img src="Nginx/Nginx进程模型工作细节02.png" alt="image-Nginx进程模型工作细节02
+" style="zoom:80%;" />
+
+## Nginx 进程间通信
+
+**图示如下**
+
+<img src="Nginx/Nginx进程间通信.png" alt="image-Nginx进程间通信.png" style="zoom:80%;" />
+
+**信号**：Master 进程通过信号控制 Worker 进程的生命周期及配置更新，典型场景：SIGHUP（重新加载配置文件）、SIGTERM（优雅关闭 Worker 进程）、SIGUSR1（重新打开日志文件）
+**管道**：Master 进程与 Worker 进程之间单向传递指令，Master 进程传递 Worker ID、指令、索引、文件描述符等等，Worker 进程监听管道事件并执行具体事项
+**共享内存**：Worker 进程间共享数据，典型场景：限流计数、缓存状态等等
+
+## HTTP 请求处理流程
+
+**图示如下**
+
+<img src="Nginx/HTTP请求包处理流程.png" alt="image-HTTP请求包处理流程" style="zoom:80%;" />
+
+# 性能优化
+
+
+## CPU性能相关
 
 ```bash
 user    nginx nginx;    #启动Nginx工作进程的用户和组
@@ -452,7 +549,7 @@ CPU MASK：0001    0号CPU
 # 压力测试 要先yum -y install httpd-tools
 ```
 
-#### 案例-修改cpu的数量
+## 案例-修改cpu的数量
 
 1. 使用top命令查看虚拟机中cpu的核心数
 
@@ -485,7 +582,7 @@ worker_cpu_affinity 0001 0010 0100 1000;
  47624 nginx: worker process         3
 ```
 
-### 错误日志记录配置
+## 错误日志记录配置
 
 ```bash
 # 错误日志记录配置，语法：error_log file [debug | info | notice | warn | error | crit | alert |emerg]
@@ -494,7 +591,7 @@ worker_cpu_affinity 0001 0010 0100 1000;
 error_log /apps/nginx/logs/error.log error;
 ```
 
-### 工作优先级与文件并发数
+## 工作优先级与文件并发数
 
 ```shell
 worker_priority 0;   #工作进程优先级(-20~19)
@@ -524,7 +621,7 @@ Every 0.5s: ps axo pid,cmd,psr,nice |grep nginx                   Mon Jul 15 08:
  23004 grep nginx                    3   0
 ```
 
-### 其他优化配置
+## 其他优化配置
 
 ```shell
 daemon off;    # 前台运行nginx服务，用于测试、docker等环境
@@ -559,261 +656,9 @@ events {
 
 
 
-## HTTP配置块
+# 其他案例
 
-http协议相关的配置结构
-
-```shell
-http {
-  ...
-  ... #各server的公共配置
-  server {    # 每个server用于定义一个虚拟主机，第一个server为默认虚拟服务器
-    ...
-  }
-  server {
-    ...
-    server_name    # 虚拟主机名
-    root      # 主目录
-    alias      # 路径别名
-    location [OPERATOR] URL {    # 指定URL的特性
-      ...
-      if CONDOTION {
-        ...
-      }
-    }
-  }
-}
-```
-
-http协议配置说明
-
-```shell
-http {
-  include mime.types;    # 导入支持的文件类型，是相对于/apps/nginx/conf的目录
-  default_type  application/octet-stream;    # 除mime.types中文件类型外，设置其他文件默认类型，访问其他类型时会提示下载不匹配的类型文件
-    
-    # 日志配置部分
-    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-    #                  '$status $body_bytes_sent "$http_referer" '
-    #                  '"$http_user_agent" "$http_x_forwarded_for"';
-    #access_log  logs/access.log  main;
-    # 自定义优化参数
-    sendfile on;
-    #tcp_nopush on;#在开启了sendfile的情况下，合并请求后统一发送给客户端
-    #tcp_nodelay off;#在开启了keeplived模式下的连接是否启用TCP_NODELAY选项，当为off时，延迟0.2s发送，默认on时，不延迟
-    #keepalive_timeout 0;
-    keepalive_timeout 65 65;# 设置会话保持时间，第二个值为响应首部:keep-Alived:timeout=65,可以和第一个值不同
-    #gzip on;#开启文件压缩
-    
-    server {
-      listen 80;# 设置监听端口
-      server_name localhost;# 设置server name,可以空格隔开写多个，并支持正则表达式，如：*.iproute.cn
-    }
-}
-```
-
-### MIME
-
-```shell
-# 在响应报文中将指定的文件扩展名映射至MIME对应的类型
-include            /etc/nginx/mime.types;
-default_type        application/octet-stream;
-types {
-  text/html html;
-  images/gif gif;
-  images/jpeg jpg;
-}
-```
-
-范例：识别php文件为text/html
-
-```shell
-[root@localhost ~]# cat /apps/nginx/html/test.php
-<?php
-        phpinfo();
-?>
-[root@localhost ~]# curl 127.0.0.1/test.php -I
-HTTP/1.1 200 OK
-Server: nginx/1.22.0
-Date: Mon, 24 May 2021 06:05:05 GMT
-Content-Type: application/octet-stream
-Content-Length: 20
-Last-Modified: Mon, 24 May 2021 06:04:49 GMT
-Connection: keep-alive
-ETag: "60ab4201-14"
-Accept-Ranges: bytes
-[root@localhost ~]# vim /apps/nginx/conf/nginx.conf
-http {
-    include       mime.types;
-    default_type  text/html;
-...
-[root@localhost ~]# nginx -s reload
-[root@localhost ~]# curl 127.0.0.1/test.php -I
-```
-
-### 指定响应报文server首部
-
-默认情况下的响应报文
-
-```bash
-[root@localhost nginx-1.22.0]#  curl -I 127.0.0.1
-HTTP/1.1 200 OK
-Server: nginx/1.22.0
-Date: Tue, 16 Jul 2024 11:35:41 GMT
-Content-Type: text/html
-Content-Length: 612
-Last-Modified: Tue, 16 Jul 2024 11:32:31 GMT
-Connection: keep-alive
-ETag: "66965a4f-264"
-Accept-Ranges: bytes
-```
-
-如何让响应报文中不要显示nginx的版本号
-
-添加配置如下：
-
-```bash
-# 配置如下字段：
-charset utf-8;
-
-# 是否在响应报文的Server首部显示nginx版本
-server_tokens on | off |build | string
-
-# 具体配置
-[root@localhost conf]# vim /apps/nginx/conf/nginx.conf
-    server {
-        listen       80;
-        server_name  localhost;
-        charset utf-8;
-        server_tokens off;
-        
-        
-# 重启nginx服务
-[root@localhost conf]# systemctl restart nginx
-```
-
-再次访问测试：
-
-```bash
-[root@localhost nginx-1.22.0]# curl -I 127.0.0.1
-HTTP/1.1 200 OK
-Server: nginx
-Date: Tue, 16 Jul 2024 11:39:35 GMT
-Content-Type: text/html; charset=utf-8
-Content-Length: 612
-Last-Modified: Tue, 16 Jul 2024 11:32:31 GMT
-Connection: keep-alive
-ETag: "66965a4f-264"
-Accept-Ranges: bytes
-```
-
-这样以来，别人访问的时候就看不到我们使用的nginx的版本，防止他人根据某个版本的漏洞进行攻击
-
-## server核心配置示例
-
-基于不同的IP、不同的端口以及不同的域名实现不同的虚拟主机，依赖于核心模块ngx_http_ core_module实现。
-
-### PC站与手机站(虚拟主机)
-
-- 定义子配置文件路径，在主配置文件最后添加导入
-
-```shell
-[root@localhost ~]# mkdir /apps/nginx/conf.d
-[root@localhost ~]# vim /apps/nginx/conf/nginx.conf
-http {
-...
-    include /apps/nginx/conf.d/*.conf;
-}
-```
-
-- 创建pc网站配置
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf.d/pc.conf
-server {
-    listen 80;
-    server_name pc.test.com;
-    location / {
-        root /apps/nginx/html/pc;
-    }
-}
-[root@localhost ~]# mkdir -p /apps/nginx/html/pc
-[root@localhost ~]# echo "hello pc web" > /apps/nginx/html/pc/index.html
-[root@localhost ~]# systemctl reload nginx
-[root@localhost conf]# vim /etc/hosts
-192.168.88.10 pc.test.com
-```
-
-- 创建移动端的网站配置
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf.d/mobile.conf
-server {
-    listen 80;
-    server_name m.test.com;
-    location / {
-        root /apps/nginx/html/mobile;
-    }
-}
-[root@localhost ~]# mkdir -p /apps/nginx/html/mobile
-[root@localhost ~]# echo "hello mobile web" > /apps/nginx/html/mobile/index.html
-[root@localhost ~]# systemctl reload nginx
-[root@localhost conf]# vim /etc/hosts
-192.168.88.10 m.test.com
-```
-
-### ROOT
-
-**root：**指定web的家目录，在定义location的时候，文件的绝对路径等于root+location
-
-**案例：**
-
-```shell
-[root@localhost conf]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-
-  location /about {
-    root /apps/nginx/html/about;
-    # 这样写其实访问的是/apps/nginx/html/下的about的about  /apps/nginx/html/about/about
-  }
-}
-[root@localhost conf]# vim /etc/hosts
-192.168.88.10 a.test.com
-
-[root@localhost ~]# mkdir -p /apps/nginx/html/about
-[root@localhost ~]# echo "about" > /apps/nginx/html/about/index.html
-
-# 重启Nginx并访问测试,404
-[root@localhost html]# systemctl restart nginx
-[root@localhost html]# curl a.test.com/about/
-<html>
-<head><title>404 Not Found</title></head>
-<body>
-<center><h1>404 Not Found</h1></center>
-<hr><center>nginx/1.22.0</center>
-</body>
-</html>
-
-# 我们把root后买你的路径中去掉about，这样一来，路径就变成了/apps/nginx/html/about/
-[root@localhost conf]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-
-  location /about {
-    root /apps/nginx/html;
-  }
-}
-
-# 重启Nginx并访问测试
-[root@localhost ~]# systemctl reload nginx
-[root@localhost ~]# curl a.test.com/about/
-about
-```
-
-### Alias
+## Alias
 
 **alias：**定义路径别名，会把访问的路径重新定义到其指定的路径，文档映射的另一种机制；仅能用于location上下文，此指令使用较少
 
@@ -838,271 +683,11 @@ server {
 about
 ```
 
-### Location的详细使用
-
-在一个server中location配置段可存在多个，用于实现从uri到文件系统的路径映射; nginx会根据用户请求的URI来检查定义所有的location,按一定的优先级找出一 个最佳匹配，然后应用其配置。
-
-在没有使用正则表达式的时候，nginx会先在server中的多个location选取匹配度最高的一个uri, uri是用户请求的字符串，即域名后面的web文件路径，然后使用该location模块中的正则uri和字符串，如果匹配成功就结束搜索，并使用此location处理此请求。
-
-location官方帮助:https://nginx.org/en/docs/http/ngx_http_core_module.html#location
-
-#### 语法规则
-
-```shell
-location [ = | ~ | ~* | ^~ ] uri { ... }
-```
-
-| 匹配正则 | 解释                                                         |
-| :------- | :----------------------------------------------------------- |
-| =        | 用于标准uri前，需要请求字串与uri精确匹配，**大小敏感**,如果匹配成功就停止向下匹配并立即处理请求 |
-| ^~       | 用于标准uri前，表示包含正则表达式，并且适配以指定的正则表达式开头,对URI的最左边部分做匹配检查，不区分字符大小写 |
-| ~        | 用于标准uri前，表示包含正则表达式，并且区分大小写            |
-| ~*       | 用于标准uri前，表示包含正则表达式， 并且不区分大写           |
-| 不带符号 | 匹配起始于此uri的所有的uri                                   |
-| \        | 用于标准uri前，表示包含正则表达式并且转义字符。可以将.*等转义为普通符号 |
-
-- 匹配优先级从高到低
-  - `= ^~ ~/~* 不带符号`
-
-#### 官方范例
-
-  - The “`/`” request will match configuration A
-  - the “`/index.html`” request will match configuration B
-  - the “`/documents/document.html`” request will match configuration C
-  - the “`/images/1.gif`” request will match configuration D
-  - the “`/documents/1.jpg`” request will match configuration E
-
-```shell
-location = / {
-    [ configuration A ]
-}
-location / {
-    [ configuration B ]
-}
-location /documents/ {
-    [ configuration C ]
-}
-location ^~ /images/ {
-    [ configuration D ]
-}
-location ~* \.(gif|jpg|jpeg)$ {
-    [ configuration E ]
-}
-```
-
-```
-server {
-  listen 80;
-  server_name a.test.com;
-  location / {
-    root /apps/nginx/html/www;
-  }
-  location /about {
-    root /apps/nginx/html/www;
-  }
-  location ^~ /images/{
-  
-  }
-  location ~* \.(gif|jpg|jpeg)$ {
-    root /apps/nginx/html/www/images;
-  }
-}
-```
-
-在Nginx的配置中,`\`和`/`在正则表达式中有以下不同的作用:
-
-1. `\`用于转义字符:
-   - 在正则表达式中,一些字符有特殊含义,如`.`、`*`、`+`等。要匹配这些字符本身,需要在前面加上`\`进行转义。
-   - 例如,要匹配一个字面量的`.`字符,需要使用`\.`。
-2. `/`用于路径分隔:
-   - 在Nginx的location块中,`/`用于表示URL路径的层级关系。
-   - 例如,`location /admin {...}`表示匹配以`/admin`开头的URL路径。
-
-总结如下:
-
-- `\`主要用于在正则表达式中对特殊字符进行转义,确保匹配字面量字符。
-- `/`主要用于表示URL路径的层级关系,在location块中使用。
-
-#### 精确匹配
-
-- 精确匹配logo
-
-```shell
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-  location / {
-    root /apps/nginx/html/www;
-  }
-  
-  location = /logo.jpg {
-    root /apps/nginx/html/images;
-  }
-}
-
-[root@localhost conf.d]# mkdir -p /apps/nginx/html/images
-[root@localhost conf.d]# cd /apps/nginx/html/images && wget https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png 
-[root@localhost images]# mv PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png logo.jpg
-[root@localhost images]# systemctl restart nginx
-[root@localhost images]# curl http://a.test.com/logo.jpg
-访问http://a.test.com/logo.jpg测试即可
-```
-
-#### 区分大小写
-
-- `~`实现区分大小写的匹配，对于以下location的意思是该图片文件名称第一个字母必须是大写的A，第二个字母可以随意。并且后缀必须是.jpg
-
-```shell
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-  location ~ /A.?\.jpg {
-# A.jpg
-# Aa
-# AB
-    index index.html;
-    root /apps/nginx/html/images;
-    }
-}
-
-[root@localhost images]# mv logo.jpg Aa.jpg
-[root@localhost images]# systemctl restart nginx
-http://a.test.com/Aa.jpg  这里可以匹配到正常访问
-[root@localhost images]# mv Aa.jpg aa.jpg
-修改文件为小写之后再访问因为大小写敏感就访问不了了
-```
-
-#### 不区分大小写
-
-- ~*用来对用户请求的uri做模糊匹配，uri中无论都是大写、都是小写或者大小写混合，此模式也都会匹配，通常使用此模式匹配用户request中的静态资源，并继续做下一步操作，此方式使用较多
-- 注意：此方式中，对Linux文件系统上的文件仍然是区分大小写的，如果磁盘文件不存在，仍会提示404
-
-```shell
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-
-  location ~* /A.?\.jpg {
-    index index.html;
-    root /apps/nginx/html/images;
-  }
-}
+## Location的详细使用
 
 
-# 这里虽然规则写的大写A但是去访问http://a.test.com/aa.jpg正常可以访问到
-```
 
-#### URI开始
-
-```shell
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-  location ^~ /images {
-      index index.html;
-      root /apps/nginx/html;
-  }
-}
-
-访问http://a.test.com/images/aa.jpg
-```
-
-- 它表示如果URL路径以 `/images` 开头,那么就使用这个location块,而不会继续尝试其他更具体的正则表达式匹配。
-- 也就是说,这个location块具有更高的优先级,一旦匹配成功就不再进行其他正则表达式的匹配。
-
-#### 文件名后缀
-
-```shell
-location ~* \.(gif|jpg|jpeg|bmp|png|tiff|tif|ico|wmf|js|css)$ {
-  index index.html;
-  root /apps/nginx/html/images/;
-}
-http://a.test.com/aa.jpg可以访问到
-```
-
-- `~*` 表示使用大小写不敏感的正则表达式进行匹配。
-- `\.` 表示匹配字面量的`.`字符。
-- `(gif|jpg|jpeg|bmp|png|tiff|tif|ico|wmf|js|css)` 是一个组合正则表达式,表示匹配这些文件扩展名。
-- `$` 表示匹配以这些扩展名结尾的URL路径。
-
-#### 优先级
-
-```shell
-[root@localhost conf.d]# mkdir - p /apps/nginx/html/static{1,2,3}
-[root@localhost conf.d]# vim /apps/nginx/conf.d/test.conf\
-server{
-	listen 80;
-    server_name a.test.com;
-    location = /1.jpg {
-      index index.html;
-      root /apps/nginx/html/static1;
-    }
-    location /1.jpg {
-      index index.html;
-      root /apps/nginx/html/static2;
-    }
-    location ~* \.(gif|jpg|jpeg|bmp|png|tiff|tif|ico|wmf|js|css)$ {
-      index index.html;
-      root /apps/nginx/html/static3;
-    }
-}
-[root@localhost conf.d]# wget -O /apps/nginx/html/static1/1.jpg "https://dummyimage.com/600x100/000/fff&text=static1"
-[root@localhost conf.d]# wget -O /apps/nginx/html/static2/1.jpg "https://dummyimage.com/600x200/000/fff&text=static2"
-[root@localhost conf.d]# wget -O /apps/nginx/html/static3/1.jpg "https://dummyimage.com/600x300/000/fff&text=static3"
-
-# 重启nginx测试访问http://a.test.com/1.jpg
-```
-
-为了更方便的看出具体显示的是哪张图片，我们修改一下windows的hosts文件，然后通过浏览器访问测试......
-
-- 匹配优先级
-  - `location = ` --> `location ^~ 路径`-->`location ~,~* 正则`-->`location 完整路径`-->`location 部分起始路径`>`/`
-
-#### 生产使用案例
-
-- 直接匹配网站根会加速Nginx访问处理（小窍门）
-
-```shell
-location = /index.html {
-  ....
-}
-location / {
-  ...
-}
-```
-
-- 静态资源配置方法1
-
-```shell
-location ^~ /static/ {
-  ...
-}
-```
-
-- 静态资源配置方案2，应用较多
-
-```shell
-location ~* \.(gif|jpg|jpeg|png|css|js|ico)$ {
-  ...
-}
-```
-
-- 多应用配置
-
-```shell
-location ~* /app1 {
-  ...
-}
-location ~* /app2 {
-  ...
-}
-```
-
-### Nginx四层访问控制
+## Nginx四层访问控制
 
 访问控制基于模块ngx_http_access_module实现，可以通过匹配客户端源IP地址进行限制
 
@@ -1133,13 +718,13 @@ Linux自己是192.168.88.10 所以自己可以访问。但是windows是192.168.8
 
 <img src="Nginx/image-20250206155731740.png" alt="image-20250206155731740" style="zoom:80%;" />
 
-### Nginx账户认证功能
+## Nginx账户认证功能
 
 由ngx_http_auth_basic_module模块提供此功能
 
 官方帮助：https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
 
-#### 案例-基于用户的账户验证
+### 案例-基于用户的账户验证
 
 1. 创建用户密码文件htpasswd
 
@@ -1185,11 +770,11 @@ server {
 
 - 这行配置指定了存储用户名和密码的文件路径为`/apps/nginx/conf/.htpasswd`。
 
-##### 访问测试
+### 访问测试
 
 <img src="Nginx/image-20250206160146402.png" alt="image-20250206160146402" style="zoom:80%;" />
 
-### 自定义错误页面
+## 自定义错误页面
 
 定义错误页，以指定的响应状态码进行响应,可用位置: http, server, location, if in location
 

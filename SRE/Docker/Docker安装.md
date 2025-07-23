@@ -12,12 +12,14 @@ Docker CE（Community Edition，社区版）和 Docker EE（Enterprise Edition�
 | **更新和生命周期** | 更新频繁，可能包含实验性功能，生命周期较短 | 更新周期更稳定，更注重稳定性和兼容性，生命周期较长 |
 
 # Docker快速安装
+
 ```shell
 [root@docker-server ~]# chmod +x install_docker_ce.sh
 [root@docker-server ~]# ./install_docker_ce.sh
 ```
 
 # Docker快速使用
+
 ```shell
 # 拉取镜像
 [root@docker-server ~]# docker pull nginx
@@ -34,12 +36,13 @@ curl 192.168.88.10:8080
 ```
 
 # Docker信息
+
 ```bash
 [root@docker-server ~]# docker info 
 ```
 
 | 配置项 | 说明 |
-|--|--|
+| :---| :---|
 | **容器状态信息** ||
 | Containers | 系统中所有容器的总数。包括运行中、已暂停和已停止的容器，用于整体容器资源评估 |
 | Running | 当前正在运行的容器数量。这些容器正常运行并提供服务，是系统负载的主要来源 |
@@ -77,6 +80,7 @@ curl 192.168.88.10:8080
 
 
 # 标准化组织OCI
+
 容器技术是一种轻量级的虚拟化技术，用于隔离应用程序及其依赖项，使其能够在不同的环境中一致地运行。除了 Docker 之外，还有其他多种容器运行时和工具，例如 CoreOS 的 rkt、阿里的 Pouch 和红帽的 Podman。为了确保容器生态系统的标准性和可持续发展，Linux 基金会、Docker、微软、红帽、谷歌和 IBM 等公司在 2015 年 6 月共同成立了 **Open Container Initiative (OCI)** 组织。
 
 ## OCI目标

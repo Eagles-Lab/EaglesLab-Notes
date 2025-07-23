@@ -1,11 +1,14 @@
 # 公共仓库
+
 ## 官方Docker仓库
+
 1. 准备账户: 登陆到[Docker Hub](https://hub.docker.com/)官网创建账号，登陆后点击settings完善信息。
 2. 填写账户基本信息: 重置密码/生成`accesstoken`
 3. `docker login docker.io` 输入用户密码即可
 4. 国内可能因为网络问题，需要代理
    
 ## 阿里云镜像仓库
+
 1. 准备账户: 登录到[Aliyun Hub](https://cr.console.aliyun.com/)官网创建账号
 2. 容器镜像服务->实例列表->镜像仓库->创建镜像仓库
 3. 执行操作指南
@@ -23,7 +26,9 @@ $ docker push registry.cn-hangzhou.aliyuncs.com/zhaohao/eagleslab:[镜像版本�
 ```
 
 # 私有仓库
+
 ## docker registry
+
 Docker Register作为Docker的核心组件之一负责镜像内容的存储与分发，客户端的docker pull以及push命令都将直接与register进行交互，最初版本的registry由python实现的，由于涉及初期在安全性、性能以及API的设计上有着诸多的缺陷，该版本在0.9之后停止了开发，由新的项目distribution（新的docker register被称为Distribution）来重新设计并开发了下一代的registry，新的项目由go语言开发，所有的api底层存储方式，系统架构都进行了全面的重新设计已解决上一代registry的问题。
 
 官方文档地址：https://docs.docker.com/registry
@@ -37,6 +42,7 @@ Docker Register作为Docker的核心组件之一负责镜像内容的存储与�
 ```
 
 ## 企业级方案Harbor
+
 参考网址：https://goharbor.io/docs/2.3.0/install-config/
 
 Harbor是一个用于存储和分发Docker镜像的企业级Registry服务器，由vmware开源，其通过添加一些企业必须的功能特性，例如安全、标识和管理等，扩展了开源的Docker Distribution。Harbor也提供了高级的安全特性，诸如用户管理，访问控制和活动审计等。

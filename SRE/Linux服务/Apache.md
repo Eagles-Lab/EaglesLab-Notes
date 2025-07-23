@@ -35,6 +35,8 @@ Apache HTTP Server简称为 Apache，是 Apache 软件基金会的一个高性�
 
 # Apache 基础
 
+## 安装部署
+
 RockyLinux 软件仓库中存在此软件包，可以直接通过 yum 进行安装
 
 ```shell
@@ -52,7 +54,7 @@ HTTP/1.1 200 OK
 
 ## httpd 命令
 
-httpd 为Apache HTTP服务器程序。
+httpd 为 Apache HTTP 服务软件的命令
 
 ```shell
 [root@localhost ~]# httpd -h
@@ -84,7 +86,7 @@ Usage: httpd [-D name] [-d Directory] [-f file]
 
 | 文件 | 说明 |
 | :--- | :--- |
-| /etc/httpd/conf/httpd.conf | Apache主配置文件 |
+| /etc/httpd/conf/httpd.conf | 主配置文件 |
 | /etc/httpd/conf.d/ | 存放虚拟主机配置文件 |
 | /etc/httpd/conf.modules.d/ | 存放模块配置文件 |
 | /etc/httpd/modules/ | 存放模块文件 |

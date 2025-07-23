@@ -1,5 +1,7 @@
 # 容器
+
 ## 使用场景
+
 开发一个杀手级的 Web 应用，它包含三个主要组件：React 前端、Python API 和 MySQL 数据库。如果你想开发这个项目，你必须安装 Node、Python 和 MySQL。
 
 - **如何确保团队中开发人员使用的Python版本一致？**
@@ -8,6 +10,7 @@
 什么是容器？独立进程。React 前端、Python API、MySQL 都在独立的环境中运行，并与其他组件完全隔离。
 
 ## 容器和虚拟机
+
 ![img](01.docker介绍与安装/容器与虚拟机对比.png)
 
 | **虚拟化**                                       | **容器**                                                |
@@ -26,37 +29,44 @@
 - **启动速度更快**：可以在数秒内完成启动。
 
 # 容器管理
+
 ## 创建容器
+
 `Usage:  docker create [OPTIONS] IMAGE [COMMAND] [ARG...]`
 ```shell
 [root@docker-server ~]# docker create -it --name nginx-test nginx bash
 ```
 
 ## 启动容器
+
 `Usage:  docker start [OPTIONS] CONTAINER [CONTAINER...]`
 ```shell
 [root@docker-server ~]# docker start nginx
 ```
 
 ## 重启容器
+
 `Usage:  docker restart [OPTIONS] CONTAINER [CONTAINER...]`
 ```shell
 [root@docker-server ~]# docker restart nginx
 ```
 
 ## 停止容器
+
 `Usage:  docker stop [OPTIONS] CONTAINER [CONTAINER...]`
 ```shell
 [root@docker-server ~]# docker stop nginx
 ```
 
 ## 列出容器
+
 `Usage:  docker ps [OPTIONS]`
 ```shell
 [root@docker-server ~]# docker ps -a
 ```
 
 ## 运行容器
+
 `Usage:  docker run [OPTIONS] IMAGE [COMMAND] [ARG...]`
 ```shell
 # 等同于 create + start
@@ -110,6 +120,7 @@
 
 
 ## 挂起/恢复容器
+
 `Usage:  docker pause CONTAINER [CONTAINER...]`
 ```shell
 [root@docker-server ~]# docker pause nginx-2
@@ -120,6 +131,7 @@
 ```
 
 ## 进入容器
+
 `Usage:  docker exec [OPTIONS] CONTAINER`
 ```shell
 [root@docker-server ~]# docker exec -it nginx-2 bash
@@ -130,6 +142,7 @@
 ```
 
 ## 导入/导出容器
+
 `Usage:  docker export [OPTIONS] CONTAINER`
 ```shell
 [root@docker-server ~]# docker export -o /opt/nginx.tar nginx-2
@@ -142,12 +155,14 @@
 **适用场景：** 主要用来制作基础镜像，比如从一个ubuntu镜像启动一个容器，然后安装一些软件和进行一些设置后，使用docker export保存为一个基础镜像。然后把这个镜像分发给其他人使用，作为基础的开发环境。(因为export导出的镜像只会保留从镜像运行到export之间对文件系统的修改，所以只适合做基础镜像)
 
 ## 查看容器日志
+
 `Usage:  docker logs [OPTIONS] CONTAINER`
 ```shell
 [root@docker-server ~]# docker logs nginx-2
 ```
 
 ## 删除容器
+
 `Usage:  docker rm [OPTIONS] CONTAINER [CONTAINER...]`
 ```shell
 [root@docker-server ~]# docker rm -f nginx-2 

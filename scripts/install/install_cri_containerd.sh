@@ -87,15 +87,13 @@ EOF
 
 #安装CNI
 
- if [ ! -f "/opt/cni/bin" ];then
-        log_info "安装CNI插件"
-        wget https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz|| exit 1
-        mkdir -p /opt/cni/bin
-        tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.6.2.tgz
-
-​		    log_info"CNI插件安裝成功"
+if [ ! -f "/opt/cni/bin" ];then
+    log_info "安装CNI插件"
+    wget https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz|| exit 1
+    mkdir -p /opt/cni/bin
+    tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.6.2.tgz
+    log_info "CNI插件安裝成功"
 fi
-
 
 
 # 重新加载 systemd 并启动 containerd
