@@ -13,7 +13,7 @@ Nginx 则是免费的、开源的、⾼性能的HTTP和反向代理服务器、�
 - Tengine：由淘宝⽹发起的Web服务器项⽬。它在Nginx的基础上，针对⼤访问量⽹站的需求，添加了很多⾼级功能和特性。Tengine的性能和稳定性已经在⼤型的⽹站如淘宝⽹，天猫商城等得到了很好的检验。它的最终⽬标是打造⼀个⾼效、稳定、安全、易⽤的Web平台，从2011年12⽉开始，Tengine成为⼀个开源项⽬，官⽹ http://tengine.taobao.org/
 - OpenResty：基于 Nginx 与 Lua 语⾔的⾼性能 Web 平台， 章亦春团队开发，官⽹ http://openresty.org/cn/
 
-## Nginx 所具备的功能
+## 功能
 
 - 静态的web资源服务器 html，image，js，css，txt 等静态资源
 - 结合 FastCGI/uWSGI/SCGI 等协议反向代理动态资源请求
@@ -379,7 +379,7 @@ location ~* \.(gif|jpg|jpeg)$ {
 
 Nginx 的访问控制是保障服务器安全的核心机制，通过多种方式精细化管控请求入口
 
-## 基于 IP 访问控制
+## 基于 IP 
 
 **典型场景**
 
@@ -400,7 +400,7 @@ location /api {
 
 ```
 
-## 基于 HTTP 认证的访问控制
+## 基于 HTTP 认证
 
 **典型场景**
 
@@ -434,6 +434,7 @@ Adding password for user admin
 [root@localhost ~]# cat << EOF > /etc/nginx/conf.d/site04.conf
 server {
     listen  8004;
+    # 精细化控制：基于请求属性
     if ($http_user_agent ~* bot) {
         return 403;
     }
@@ -462,6 +463,676 @@ HTTP/1.1 401 Unauthorized
 HTTP/1.1 403 Forbidden
 ```
 
+# 日志相关
+
+## 访问日志
+
+记录客户端请求信息（IP、请求方法、状态码、响应大小等）
+
+**相关配置指令**
+
+```shell
+Syntax:    access_log path [format [buffer=size] [gzip[=level]] [flush=time] [if=condition]];
+           access_log off;
+Default:   access_log logs/access.log combined;
+Context:   http, server, location, if in location, limit_except
+
+
+Syntax:    log_format name [escape=default|json|none] string ...;
+Default:   log_format combined "...";
+Context:   http
+
+```
+
+**官方案例**
+
+```shell
+# 定义日志格式
+log_format compression '$remote_addr - $remote_user [$time_local] '
+                       '"$request" $status $bytes_sent '
+                       '"$http_referer" "$http_user_agent" "$gzip_ratio"';
+# 定义访问日志
+access_log /spool/logs/nginx-access.log compression buffer=32k;
+```
+
+
+## 错误日志
+
+记录服务器错误、警告及调试信息
+
+**相关配置指令**
+
+```shell
+Syntax:    error_log file [level];
+Default:   error_log logs/error.log error;
+Context:   main, http, mail, stream, server, location
+
+# 日志级别：debug info notice warn error crit alert emerg
+
+```
+
+**案例分析**：参考主配置文件中日志相关配置
+
+# 常用变量
+
+## 内置变量
+
+常用内置变量
+
+```shell
+$remote_addr;
+# 存放了客户端的地址，注意是客户端的公网IP
+$proxy_add_x_forwarded_for;
+# 此变量表示将客户端IP追加请求报文中X-Forwarded-For首部字段，多个IP之间用逗号分隔，如果请求中没有X-Forwarder-For，就使用$remote_addr
+$args;
+# 变量中存放了URL中的参数
+$document_root;
+# 保存了针对当前资源的系统根目录
+$document_uri;
+# 保存了当前请求中不包含参数的URI,注意是不包含请求的指令，比如/img/logo.png
+$host;
+# 存放了请求的host名称
+limit_rate 10240;
+echo $limit_rate;
+# 如果nginx服务器使用limit_rate配置了显示网络速率，则会显示，如果没有设置，则显示0
+$remote_port;
+# 客户端请求Nginx服务器时随机打开的端口，这是每个客户端自己的端口
+$remote_user;
+# 已经经过Auth Basic Module验证的用户名
+$request_body_file;
+# 做反向代理时发给后端服务器的本地资源的名称
+$request_method;
+# 请求资源的方式，GET/PUT等等
+$request_filename;
+# 当前请求的资源文件的磁盘路径，由root或alias指令与URL请求生成的文件绝对路径
+# /apps/nginx/html/www/index.html
+$request_uri;
+# 包含请求参数的原始URI,不包含主机名，相当于:$document_uri?$args
+$scheme;
+# 请求的协议，例如：http,https,ftp等等
+$server_protocol;
+# 保存了客户端请求资源使用的协议版本，例如：HTTP/1.0,HTTP/1.1,HTTP/2.0等等
+$server_addr;
+# 保存了服务器的IP地址
+$server_name;
+# 请求的服务器的主机名
+$server_port;
+# 请求的服务器的端口号
+$http_<name>
+# name为任意请求报文首部字段，表示记录请求报文的首部字段
+$http_user_agent;
+# 客户端浏览器的详细信息
+$http_cookie;
+# 客户端的cookie信息
+$cookie_<name>
+# name为任意请求报文首部字段cookie的key名
+```
+
+## 自定义变量
+
+假如需要自定义变量名和值，使用指令set $variable value;
+
+语法格式：
+
+```shell
+Syntax:set $varible value;
+Default: -
+Context: server, location, if
+```
+
+范例：
+
+```shell
+[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
+set $name zs;
+echo $name;
+set $my_port $server_port;
+echo $my_port;
+echo "$server_name:$server_port";
+```
+
+# 网页压缩技术
+
+网页压缩技术主要通过 ngx_http_gzip_module 模块​​实现，它能显著减少传输数据量，提升网站加载速度和用户体验
+
+```shell
+# 启用或禁用 gzip 压缩，默认关闭
+gzip on | off;
+# 压缩比由低到高1到9，默认为1
+gzip_comp_level level;
+# 禁用 IE6 gzip 功能
+gzip_disable "MSIE [1-6]\.";
+# gzip 压缩的最小文件，小于设置值的文件将不会压缩
+gzip_min_length 1k;
+# 启用压缩功能时，协议的最小版本，默认 HTTP/1.1
+gzip_http_version 1.0 | 1.1;
+# 指定 Nginx 服务需要向服务器申请的缓存空间的个数和大小，平台不同，默认：32 4k或者 16 8k
+gzip_buffers number size;
+# 指明仅对哪些类型的资源执行压缩操作，默认为 gzip_types text/html，不用显示指定，否则出错
+gzip_types mime-type ...;
+# 如果启用压缩，是否在相应报文首部插入 "vary: Accept-Encoding"，一般建议打开
+gzip_vary on | off
+
+```
+
+**案例分析**：参考 Apache 对应案例的测试验证思路
+
+# Nginx 第三方模块
+
+第三方模块是对nginx的功能扩展，第三方模块需要在编译安装Nginx的时候使用参数--add-module=PATH指定路径添加，有的模块是由公司的开发人员针对业务需求定制开发的，有的模块是开源爱好者开发好之后上传到github进行开源的模块，nginx支持第三方模块需要从源码重新编译支持.
+
+开源 **echo模块**：https://github.com/openresty/echo-nginx-module
+
+```shell
+[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/echo.conf
+server {
+    listen 80;
+    server_name echo.test.com;
+
+    location /main {
+        index index.html;
+        default_type text/html;
+        echo "hello world,main-->";
+        echo $remote_addr;
+        echo_reset_timer;
+        # 将计时器开始时间重置为当前时间
+
+        echo_location /sub1;
+        echo_location /sub2;
+        echo "took $echo_timer_elapsed sec for total.";
+}
+    location /sub1 {
+        echo_sleep 2;
+        echo hello;
+}
+    location /sub2 {
+        echo_sleep 1;
+        echo world;
+}
+}
+
+
+# 重新编译nginx，以前的配置文件不会丢失
+[root@localhost ~]# cd /usr/local/src
+[root@localhost src]# wget https://github.com/openresty/echo-nginx-module/archive/refs/heads/master.zip
+[root@localhost src]# unzip echo-nginx-module-master.zip
+[root@localhost src]# mv echo-nginx-module-master echo-nginx-module
+[root@localhost src]# cd nginx-1.22.0
+[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
+--user=nginx \
+--group=nginx \
+--with-http_ssl_module \
+--with-http_v2_module \
+--with-http_realip_module \
+--with-http_stub_status_module \
+--with-http_gzip_static_module \
+--with-pcre \
+--with-stream \
+--with-stream_ssl_module \
+--with-stream_realip_module \
+--add-module=/usr/local/src/echo-nginx-module
+[root@localhost nginx-1.22.0]# make -j 2 && make install
+
+
+# 进行访问测试
+[root@localhost ~]# echo "192.168.88.10 echo.test.com" >> /etc/hosts
+[root@localhost ~]# curl echo.test.com/main
+hello world,main-->
+192.168.88.140
+hello
+world
+took 3.008 sec for total.
+
+```
+
+# 其他配置项
+
+## Alias
+
+**alias：**定义路径别名，会把访问的路径重新定义到其指定的路径，文档映射的另一种机制；仅能用于location上下文，此指令使用较少
+
+**案例：**
+
+```shell
+[root@localhost conf]# vim /apps/nginx/conf.d/test.conf
+server {
+  listen 80;
+  server_name a.test.com;
+
+  location /about/ {
+  # 使用alias的时候uri后面加了斜杠，下面的路径也必须加，不然403错误
+    alias /apps/nginx/html/about/;
+    # 当访问about的时候，会显示alias定义的/apps/nginx/html/about/里面的内容
+  }
+}
+
+# 重启Nginx并访问测试
+[root@localhost ~]# systemctl reload nginx
+[root@localhost ~]# curl a.test.com/about/
+about
+```
+
+
+## 自定义错误页面
+
+定义错误页，以指定的响应状态码进行响应,可用位置: http, server, location, if in location
+
+```shell
+erro_page code ... [=[response]] uri;
+```
+
+**官方示例：**
+
+```shell
+[root@localhost static3]# vim /apps/nginx/conf/nginx.conf
+server {
+listen 80;
+server_name www.example.com;
+error_page 500 502 503 504 /error.html;
+location = /error.html {
+  root html;
+}
+```
+
+**范例：**
+
+```shell
+[root@localhost static3]# vim /apps/nginx/conf.d/test.conf
+server {
+    listen 80;
+    server_name a.test.com;
+    auth_basic "login password";
+    auth_basic_user_file /apps/nginx/conf/.htpasswd;
+    error_page 404 /40x.html;
+    location = /1.jpg {
+        index index.html;
+        root /apps/nginx/static1;
+    }
+    location /40x.html{
+    	root /apps/nginx/html;
+    }
+}
+[root@localhost html]# echo "<h1>404 not found</h1>" > /apps/nginx/html/40x.html 
+```
+
+**范例：**
+
+```shell
+error_page 404 /index.html;
+# 如果404，就跳转到主页
+```
+
+
+
+## 长连接配置
+
+```shell
+[root@localhost html]# vim /apps/nginx/conf/nginx.conf
+
+keepalive_timeout timeout [header_timeout];
+# 设定保持连接超时时长，0表示禁止长连接，默认为75s,通常配置在http字段作为站点全局配置
+keepalive_requests number;
+# 在一次长连接上所允许请求的资源的最大数量，默认为100次，建议适当调大，比如：500
+```
+
+范例：
+
+```shell
+[root@localhost html]# vim /apps/nginx/conf/nginx.conf
+http {
+...
+keepalive_requests 3;
+keepalive_timeout 65 60;
+# 开启长连接后，返回客户端的会话保持时间为60s，单次长连接累计请求达到指定次数请求或65秒就会被断开，后面的60为发送给客户端应答报文头部中显示的超时时间设置为60s，如不设置客户端将不显示超时时间。
+keep-Alive:timeout=60;
+# 浏览器收到的服务器返回的报文
+# 如果设置为keepalive_timeout 0表示关闭会话保持功能，将如下显示：
+Connection:close  # 浏览器收到的服务器返回的报文
+# 使用命令测试
+[root@localhost html]# telnet a.test.com 80
+Trying 192.168.88.10...
+Connected to a.test.com.
+Escape character is '^]'.
+GET / HTTP/1.1
+HOST: a.test.com
+```
+
+## 作为下载服务器
+
+ngx_http_autoindex_module模块处理以斜杠字符"/"结尾的请求，并生成目录列表可以做为下载服务配置使用
+
+官方文档：https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
+
+相关指令：
+
+```shell
+autoindex on|off;
+# 自动文件索引功能，默认off
+autoindex_exact_size on|off;
+# 计算文件确切大小(单位bytes),off显示大概大小(单位K、M),默认on
+autoindex_localtime on|off;
+# 显示本机时间而非GMT(格林威治)时间,默认off
+autoindex_format html|xml|json|jsonp;
+# 显示索引的页面分割，默认html
+limit_rate rate;
+# 限制响应客户端传输速率(除GET和HEAD以外的所有方法),单位B/s,既bytes/second,默认值0，表示无限制，此指令由ngx_http_core_module提供
+```
+
+范例：实现下载站点
+
+```shell
+[root@localhost ~]# mkdir -p /apps/nginx/html/www/download
+[root@localhost ~]# cd /apps/nginx/html/www/download
+[root@localhost download]# touch f1
+[root@localhost download]# touch f2
+[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
+server {
+    listen 80;
+    server_name file.test.com;
+    location /download {
+        autoindex on;    
+        # 自动索引功能,开启才会展示出文件列表
+        autoindex_exact_size off;    
+        # 关闭详细文件大小统计，让文件大小显示MB，GB单位，默认为b
+        autoindex_localtime on;    
+        # on表示显示本机时间
+        limit_rate 1024k;      
+        # 限速，默认不限速
+        root /apps/nginx/html/www;
+    }
+}
+
+
+# 修改windwos里面的hosts
+192.168.88.140 file.test.com
+测试http://file.test.com/download/
+```
+
+## 作为上传服务器
+
+```shell
+client_max_body_size 1m;
+# 设置允许客户端上传单个文件的最大值，默认值为1m,上传文件超过此值会出现413错误
+client_body_buffer_size size;
+# 用户接受每个客户端请求报文的body部分的缓冲区大小;默认16k;超出此大小时，其将被暂存到磁盘上client_body_temp_path指定所定义的位置
+client_body_temp_path path [level1 [level 2 [level 3]]];
+# 设定存储客户端请求报文的body部分的临时存储路径及子目录结构和数量，目录名为16进制的数字，使用hash之后的值从后往前截取1位、2位、2位作为目录名
+# 1级目录占1位16进制，即2^4=16个目录 0-f
+# 2级默认占2位16进制，即2^8=256个目录 00-ff
+# 3级目录占2位16进制，即2^8=256个目录
+#因为如果所有上传的文件都放在一个文件夹下，不仅很容易文件名冲突，并且容易导致一个文件夹特别大。所以有必要创建子目录这里的level1,2,3如果有值就代表存在一级，二级，三级子目录。目录名是由数字进行命名的，所以这里的具体的值就是代表目录名的数字位数，比如如果如下设置
+#client_body_temp_path  /spool/nginx/client_temp 3 2;
+#可能创建的文件路径为
+#/spool/nginx/client_temp/702/45/00000123457
+[root@localhost ~]# md5sum f1
+d41d8cd98f00b204e9800998ecf8427e  f1
+[root@localhost ~]# md5sum f2
+b026324c6904b2a9cb4b88d6d61c81d1  f2
+```
+
+**配置示例：**但是上传操作不太好展示，因为需要从前端通过POST和GET来提交上传的内容
+
+```bash
+server {
+        listen       80;
+        server_name  upload.test.com;
+
+        location /upload {
+            # 上传目录
+            root /apps/nginx/upload;
+            # 允许上传的文件大小
+            client_max_body_size 2m;
+            # 处理上传请求
+            location ~ ^/upload/(?P<file>.*) {
+                limit_rate 1m;
+                limit_rate_after 10m;
+                client_body_temp_path /tmp/nginx_upload;
+                client_body_in_file_only clean;
+
+                # 保存上传的文件
+                alias /apps/nginx/upload/$file;
+            }
+        }
+    }
+
+```
+
+## Nginx 状态页
+
+基于nginx模块ngx_http_stub_status_ module实现，在编译安装nginx的时候需要添加编译参数--with-http_stub_status_module,否则配置完成之后监测会是提示语法错误
+
+注意:状态页显示的是整个服务器的状态，而非虚拟主机的状态
+
+```shell
+[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
+server {
+    listen 80;
+    server_name status.test.com;
+
+    location /status {
+        stub_status on;
+        # 开启nginx状态页显示
+        allow 192.168.88.0/24;
+        deny all;
+    }
+}
+
+[root@localhost ~]# vim /etc/hosts
+192.168.88.140 status.test.com
+[root@localhost download]# curl http://status.test.com/status
+Active connections: 1
+server accepts handled requests
+ 1 1 1
+Reading: 0 Writing: 1 Waiting: 0
+```
+
+<img src="Nginx/状态页.png" alt="img-状态页" style="zoom:150%;" />
+
+- Active connections: 2 表示Nginx正在处理的活动连接数2个。
+- server 2 表示Nginx启动到现在共处理了2个连接
+- accepts 2 表示Nginx启动到现在共成功创建2次握手
+- handled requests 1 表示总共处理了 1 次请求
+- Reading:Nginx 读取到客户端的 Header 信息数，数值越大，说明排队越长，性能不足
+- Writing:Nginx 返回给客户端 Header 信息数，数值越大，说明访问量越大
+- Waiting:Nginx 已经处理完正在等候下一次请求指令的驻留链接（开启keep-alive的情况下，这个值等于Active-(Reading+Writing)）
+
+
+## 其他
+
+- 对哪种浏览器禁用长连接
+
+```shell
+keepalive_disable none | browser ...;
+```
+
+- 限制客户端使用除了指定的请求方法之外的其他方法
+
+```shell
+limit_except method ... { ... }；  # 仅用于location
+method: GET, HEAD, POST, PUT, DELETE, MKCOL, COPY, MOVE, OPTIONS, PROPFIND, PROPPATCH, LOCK, UNLOCK, PATCH
+[root@localhost conf.d]# vim /apps/nginx/conf.d/www.conf
+location /download {
+    root /apps/nginx/html/www;
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
+    limit_except POST {          #相当于只允许底下允许列表里的使用除了post外的其他方法
+    allow 192.168.112.1;         #只有浏览器可以使用除了post外的其他方法(get delete)，其他人只能用post
+    deny all;
+}
+}
+[root@localhost conf.d]# systemctl restart nginx
+
+
+# 观察现象
+curl file.test.com/download
+curl file.test.com/download -X POST -d "hello"
+两次报错不一致，一个403一个404
+
+cd /apps/nginx/html/www
+touch f1
+touch f2
+vim /apps/nginx/conf.d/www.conf
+
+将 root /apps/nginx/html/www;改成    alias /apps/nginx/html/www;
+浏览器测试 http://file.test.com/download/，能否访问到get请求
+```
+
+- 是否启用asynchronous file I/O(AIO)功能，需要编译开启`--with-file-aio`
+- 在读取文件的时候使用异步可以提高效率
+
+```shell
+aio on | off;
+```
+
+```shell
+[root@localhost nginx-1.22.0]# cd /usr/local/src/nginx-1.22.0 
+[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
+--user=nginx \
+--group=nginx \
+--with-http_ssl_module \
+--with-http_v2_module \
+--with-http_realip_module \
+--with-http_stub_status_module \
+--with-http_gzip_static_module \
+--with-pcre \
+--with-stream \
+--with-stream_ssl_module \
+--with-stream_realip_module \
+--with-file-aio
+[root@localhost nginx-1.22.0]# make -j 2 && make install
+[root@localhost nginx-1.22.0]# nginx -V
+nginx version: slsnginx/1.22.0
+built by gcc 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC)
+built with OpenSSL 1.0.2k-fips  26 Jan 2017
+TLS SNI support enabled
+configure arguments: --prefix=/apps/nginx --user=nginx --group=nginx --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_stub_status_module --with-http_gzip_static_module --with-pcre --with-stream --with-stream_ssl_module --with-stream_realip_module --with-file-aio
+#支持file-aio了
+[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/www.conf
+server {
+  listen 80;
+  server_name file.test.com;
+  aio on;
+...
+}
+```
+
+- directio是在写文件到磁盘的时候大小大于size的时候，直接写磁盘，而非写缓存
+
+```shell
+directio size | off;
+```
+
+- Nginx支持对磁盘中的文件进行缓存
+
+```shell
+open_file_cache on;    # 是否缓存打开过的文件信息
+open_file_cache max=N [inactive=time];
+#nginx可以缓存以下三种信息：
+#1. 文件元数据，文件的描述符，文件大小和最近一次的修改时间
+#2. 打开的目录结构
+#3. 没有找到的或者没有权限访问的文件相关信息
+max=N;    # 可缓存的缓存项上限数量；达到上限后会使用LRU(Least recently used,最近最少使用)算法实现管理
+inactive=time;    # 缓存项的非活动时长，在此处指定的时长内未被命中的或命中的次数少于open_file_cache_min_uses指令所指定的次数的缓存项即为非活动项，将被删除
+open_file_cache_valid time;  #缓存项有效性的检查验证频率，默认值为60s
+open_file_cache_errors on | off；   #是否缓存查找时发生错误的文件一类的信息，默认值为off
+open_file_cache_min_uses number;   # open_file_cache指令的inactive参数指定的时长内，至少被命中此处指定的次数方可被归类为活动项，默认值为1
+```
+
+范例：
+
+```shell
+open_file_cache max=10000 inactive=60s;
+open_file_cache_vaild 60s;
+open_file_cache_min_uses 5;
+open_file_cache_errors off;
+```
+
+
+# HTTPS 功能
+
+Web网站的登录页面都是使用https加密传输的，加密数据以保障数据的安全，HTTPS能够加密信息，以免敏感信息被第三方获取,所以很多银行网站或电子邮箱等等安全级别较高的服务都会采用HTTPS协议，HTTPS其实是有两部分组成: HTTP + SSL/ TLS,也就是在HTTP上又加了一层处理加密信息的模块。服务端和客户端的信息传输都会通过TLS进行加密，所以传输的数据都是加密后的数据。
+
+
+## 配置参数
+
+nginx的https功能基于模块ngx_http_ssl_module实现，因此如果是编译安装的nginx要使用参数ngx_http_ssl_module开启ssI功能，但是作为nginx的核心功能，yum安装的nginx默认就是开启的，编译安装的nginx需要指定编译参数--with-http_ssl_module开启
+
+官方文档：https://nginx.org/en/docs/http/ngx_http_ssl_module.html
+
+配置参数如下：
+
+```shell
+ssl on | off;
+listen 443 ssl;
+# 为指定的虚拟主机配置是否启用ssl功能，此功能在1.15.0废弃，使用listen [ssl]替代。
+ssl_certificate /path/to/file;
+# 当前虚拟主机使用使用的公钥文件，一般是crt文件
+ssl_certificate_key /path/to/file;
+# 当前虚拟主机使用的私钥文件，一般是key文件
+ssl_protocols [SSLv2] [SSLv3] [TLSv1] [TLSv1.1] [TLSv1.2];
+# 支持ssl协议版本，早期为ssl现在是TSL，默认为后三个
+ssl_session_cache off | none | [builtin[:size]] [shared:name:size];
+# 配置ssl缓存
+	off： 
+	# 关闭缓存
+	none: 
+	# 通知客户端支持ssl session cache，但实际不支持
+	builtin[:size]：
+	# 使用OpenSSL内建缓存，为每worker进程私有
+	[shared:name:size]：
+	# 在各worker之间使用一个共享的缓存，需要定义一个缓存名称和缓存空间大小，一兆可以存储4000个会话信息，多个虚拟主机可以使用相同的缓存名称。
+ssl_session_timeout time;
+# 客户端连接可以复用ssl session cache中缓存的有效时长，默认5m
+```
+
+## 自签名证书
+
+- 生成ca证书
+
+```shell
+[root@localhost ~]# cd /apps/nginx
+[root@localhost nginx]# mkdir certs && cd certs
+[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 -out ca.crt
+```
+
+- 生成证书请求文件
+
+```shell
+[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout iproute.cn.key -out iproute.cn.csr
+```
+
+- 签发证书
+
+```shell
+[root@localhost certs]# openssl x509 -req -days 36500 -in iproute.cn.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out iproute.cn.crt
+[root@localhost certs]# cat iproute.cn.crt ca.crt > iproute.crt
+```
+
+- 验证证书内容
+
+```shell
+[root@localhost certs]# openssl x509 -in iproute.cn.crt -noout -text
+```
+
+## 证书配置
+
+```shell
+[root@localhost certs]# vim /apps/nginx/conf.d/ssl.conf
+server {
+    listen 80;
+    listen 443 ssl;
+    ssl_certificate /apps/nginx/certs/iproute.crt;
+    ssl_certificate_key /apps/nginx/certs/iproute.cn.key;
+    ssl_session_cache shared:sslcache:20m;
+    ssl_session_timeout 10m;
+    root /apps/nginx/html;
+}
+```
+
+## 测试验证
+
+<img src="Nginx/https测试验证.png" alt="image-https测试验证" style="zoom:80%;" />
 
 # Nginx 架构和进程
 
@@ -549,7 +1220,9 @@ CPU MASK：0001    0号CPU
 # 压力测试 要先yum -y install httpd-tools
 ```
 
-## 案例-修改cpu的数量
+**案例分析**
+
+修改 cpu 数量
 
 1. 使用top命令查看虚拟机中cpu的核心数
 
@@ -580,15 +1253,6 @@ worker_cpu_affinity 0001 0010 0100 1000;
  47622 nginx: worker process         1
  47623 nginx: worker process         2
  47624 nginx: worker process         3
-```
-
-## 错误日志记录配置
-
-```bash
-# 错误日志记录配置，语法：error_log file [debug | info | notice | warn | error | crit | alert |emerg]
-# error_log logs/error.log;
-# error_log logs/error.log notice;
-error_log /apps/nginx/logs/error.log error;
 ```
 
 ## 工作优先级与文件并发数
@@ -655,1013 +1319,49 @@ events {
 ```
 
 
-
-# 其他案例
-
-## Alias
-
-**alias：**定义路径别名，会把访问的路径重新定义到其指定的路径，文档映射的另一种机制；仅能用于location上下文，此指令使用较少
-
-**案例：**
-
-```shell
-[root@localhost conf]# vim /apps/nginx/conf.d/test.conf
-server {
-  listen 80;
-  server_name a.test.com;
-
-  location /about/ {
-  # 使用alias的时候uri后面加了斜杠，下面的路径也必须加，不然403错误
-    alias /apps/nginx/html/about/;
-    # 当访问about的时候，会显示alias定义的/apps/nginx/html/about/里面的内容
-  }
-}
-
-# 重启Nginx并访问测试
-[root@localhost ~]# systemctl reload nginx
-[root@localhost ~]# curl a.test.com/about/
-about
-```
-
-## Location的详细使用
-
-
-
-## Nginx四层访问控制
-
-访问控制基于模块ngx_http_access_module实现，可以通过匹配客户端源IP地址进行限制
-
-注意:如果能在防火墙设备控制最好就不要在nginx上配置,可以更好的节约资源
-
-官方帮助：https://nginx.org/en/docs/http/ngx_http_access_module.html
-
-范例：
-
-```shell
-[root@localhost static3]# vim /apps/nginx/conf.d/test.conf
-server {
-    listen 80;
-    server_name a.test.com;
-    location = /1.jpg {
-        index index.html;
-        root /apps/nginx/html/static1;
-        allow 192.168.88.10;
-        deny all;
-	
-	}
-}
-
-# 禁止了主机访问，虚拟机本机可以访问刚才的1.jpg
-```
-
-Linux自己是192.168.88.10 所以自己可以访问。但是windows是192.168.88.1拒绝访问
-
-<img src="Nginx/image-20250206155731740.png" alt="image-20250206155731740" style="zoom:80%;" />
-
-## Nginx账户认证功能
-
-由ngx_http_auth_basic_module模块提供此功能
-
-官方帮助：https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
-
-### 案例-基于用户的账户验证
-
-1. 创建用户密码文件htpasswd
-
-```bash
-# htpasswd命令是由httpd-tools软件包提供
-[root@localhost ~]# yum install -y httpd-tools
-[root@localhost ~]# htpasswd -cb /apps/nginx/conf/.htpasswd user1 123
-[root@localhost ~]# htpasswd -b /apps/nginx/conf/.htpasswd user2 123
-# -c  创建用户
-# -b  非交互方式提交密码
-```
-
-2. 检查创建好的密码本
-
-```bash
-[root@localhost ~]# tail /apps/nginx/conf/.htpasswd
-user1:$apr1$N5FQRfTZ$41cCA49sQCSA9z71hlO6n.
-user2:$apr1$/NXK7rS7$1AUTuESFJEQW490XjTs851
-```
-
-3. 编辑子配置文件`test.conf`
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf.d/test.conf
-server {
-    listen 80;
-    server_name a.test.com;
-    auth_basic "login password";
-    auth_basic_user_file /apps/nginx/conf/.htpasswd;
-    location = /1.jpg {
-        index index.html;
-        root /apps/nginx/html/static1;
-    }
-}
-[root@localhost ~]# systemctl restart nginx
-```
-
-`auth_basic "login password";`
-
-- 这行配置开启了基本的HTTP身份验证功能,提示信息为"login password"。
-
-`auth_basic_user_file /apps/nginx/conf/.htpasswd;`
-
-- 这行配置指定了存储用户名和密码的文件路径为`/apps/nginx/conf/.htpasswd`。
-
-### 访问测试
-
-<img src="Nginx/image-20250206160146402.png" alt="image-20250206160146402" style="zoom:80%;" />
-
-## 自定义错误页面
-
-定义错误页，以指定的响应状态码进行响应,可用位置: http, server, location, if in location
-
-```shell
-erro_page code ... [=[response]] uri;
-```
-
-**官方示例：**
-
-```shell
-[root@localhost static3]# vim /apps/nginx/conf/nginx.conf
-server {
-listen 80;
-server_name www.example.com;
-error_page 500 502 503 504 /error.html;
-location = /error.html {
-  root html;
-}
-```
-
-**范例：**
-
-```shell
-[root@localhost static3]# vim /apps/nginx/conf.d/test.conf
-server {
-    listen 80;
-    server_name a.test.com;
-    auth_basic "login password";
-    auth_basic_user_file /apps/nginx/conf/.htpasswd;
-    error_page 404 /40x.html;
-    location = /1.jpg {
-        index index.html;
-        root /apps/nginx/static1;
-    }
-    location /40x.html{
-    	root /apps/nginx/html;
-    }
-}
-[root@localhost html]# echo "<h1>404 not found</h1>" > /apps/nginx/html/40x.html 
-```
-
-**范例：**
-
-```shell
-error_page 404 /index.html;
-# 如果404，就跳转到主页
-```
-
-### 自定义错误日志
-
-可以自定义错误日志
-
-```shell
-Syntax: error_log file [level];
-Default:
-error_log logs/error.log error;
-Context: main, http, mail, stream, server, location
-level: debug, info, notice, warn, error, crit, alert, emerg
-```
-
-范例：
-
-```shell
-[root@localhost static3]# vim /apps/nginx/conf/nginx.conf
-server{
-...
-error_page 500 502 503 504 404 /error.html;
-access_log /apps/nginx/logs/a_test_access.log;
-error_log /apps/nginx/logs/a_test_error.log;
-location = /error.html {
-  root html;
-}
-```
-
-### 长连接配置
-
-```shell
-[root@localhost html]# vim /apps/nginx/conf/nginx.conf
-
-keepalive_timeout timeout [header_timeout];
-# 设定保持连接超时时长，0表示禁止长连接，默认为75s,通常配置在http字段作为站点全局配置
-keepalive_requests number;
-# 在一次长连接上所允许请求的资源的最大数量，默认为100次，建议适当调大，比如：500
-```
-
-范例：
-
-```shell
-[root@localhost html]# vim /apps/nginx/conf/nginx.conf
-http {
-...
-keepalive_requests 3;
-keepalive_timeout 65 60;
-# 开启长连接后，返回客户端的会话保持时间为60s，单次长连接累计请求达到指定次数请求或65秒就会被断开，后面的60为发送给客户端应答报文头部中显示的超时时间设置为60s，如不设置客户端将不显示超时时间。
-keep-Alive:timeout=60;
-# 浏览器收到的服务器返回的报文
-# 如果设置为keepalive_timeout 0表示关闭会话保持功能，将如下显示：
-Connection:close  # 浏览器收到的服务器返回的报文
-# 使用命令测试
-[root@localhost html]# telnet a.test.com 80
-Trying 192.168.88.10...
-Connected to a.test.com.
-Escape character is '^]'.
-GET / HTTP/1.1
-HOST: a.test.com
-```
-
-### 作为下载服务器
-
-ngx_http_autoindex_module模块处理以斜杠字符"/"结尾的请求，并生成目录列表可以做为下载服务配置使用
-
-官方文档：https://nginx.org/en/docs/http/ngx_http_autoindex_module.html
-
-相关指令：
-
-```shell
-autoindex on|off;
-# 自动文件索引功能，默认off
-autoindex_exact_size on|off;
-# 计算文件确切大小(单位bytes),off显示大概大小(单位K、M),默认on
-autoindex_localtime on|off;
-# 显示本机时间而非GMT(格林威治)时间,默认off
-autoindex_format html|xml|json|jsonp;
-# 显示索引的页面分割，默认html
-limit_rate rate;
-# 限制响应客户端传输速率(除GET和HEAD以外的所有方法),单位B/s,既bytes/second,默认值0，表示无限制，此指令由ngx_http_core_module提供
-```
-
-范例：实现下载站点
-
-```shell
-[root@localhost ~]# mkdir -p /apps/nginx/html/www/download
-[root@localhost ~]# cd /apps/nginx/html/www/download
-[root@localhost download]# touch f1
-[root@localhost download]# touch f2
-[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
-server {
-    listen 80;
-    server_name file.test.com;
-    location /download {
-        autoindex on;    
-        # 自动索引功能,开启才会展示出文件列表
-        autoindex_exact_size off;    
-        # 关闭详细文件大小统计，让文件大小显示MB，GB单位，默认为b
-        autoindex_localtime on;    
-        # on表示显示本机时间
-        limit_rate 1024k;      
-            # 限速，默认不限速
-        root /apps/nginx/html/www;
-    }
-}
-
-
-# 修改windwos里面的hosts
-192.168.88.140 file.test.com
-测试http://file.test.com/download/
-```
-
-### 作为上传服务器
-
-```shell
-client_max_body_size 1m;
-# 设置允许客户端上传单个文件的最大值，默认值为1m,上传文件超过此值会出现413错误
-client_body_buffer_size size;
-# 用户接受每个客户端请求报文的body部分的缓冲区大小;默认16k;超出此大小时，其将被暂存到磁盘上client_body_temp_path指定所定义的位置
-client_body_temp_path path [level1 [level 2 [level 3]]];
-# 设定存储客户端请求报文的body部分的临时存储路径及子目录结构和数量，目录名为16进制的数字，使用hash之后的值从后往前截取1位、2位、2位作为目录名
-# 1级目录占1位16进制，即2^4=16个目录 0-f
-# 2级默认占2位16进制，即2^8=256个目录 00-ff
-# 3级目录占2位16进制，即2^8=256个目录
-#因为如果所有上传的文件都放在一个文件夹下，不仅很容易文件名冲突，并且容易导致一个文件夹特别大。所以有必要创建子目录这里的level1,2,3如果有值就代表存在一级，二级，三级子目录。目录名是由数字进行命名的，所以这里的具体的值就是代表目录名的数字位数，比如如果如下设置
-#client_body_temp_path  /spool/nginx/client_temp 3 2;
-#可能创建的文件路径为
-#/spool/nginx/client_temp/702/45/00000123457
-[root@localhost ~]# md5sum f1
-d41d8cd98f00b204e9800998ecf8427e  f1
-[root@localhost ~]# md5sum f2
-b026324c6904b2a9cb4b88d6d61c81d1  f2
-```
-
-**配置示例：**但是上传操作不太好展示，因为需要从前端通过POST和GET来提交上传的内容
-
-```bash
-server {
-        listen       80;
-        server_name  upload.test.com;
-
-        location /upload {
-            # 上传目录
-            root /apps/nginx/upload;
-            # 允许上传的文件大小
-            client_max_body_size 2m;
-            # 处理上传请求
-            location ~ ^/upload/(?P<file>.*) {
-                limit_rate 1m;
-                limit_rate_after 10m;
-                client_body_temp_path /tmp/nginx_upload;
-                client_body_in_file_only clean;
-
-                # 保存上传的文件
-                alias /apps/nginx/upload/$file;
-            }
-        }
-    }
-
-```
-
-### 其他配置
-
-- 对哪种浏览器禁用长连接
-
-```shell
-keepalive_disable none | browser ...;
-```
-
-- 限制客户端使用除了指定的请求方法之外的其他方法
-
-```shell
-limit_except method ... { ... }；  # 仅用于location
-method: GET, HEAD, POST, PUT, DELETE, MKCOL, COPY, MOVE, OPTIONS, PROPFIND, PROPPATCH, LOCK, UNLOCK, PATCH
-[root@localhost conf.d]# vim /apps/nginx/conf.d/www.conf
-location /download {
-    root /apps/nginx/html/www;
-    autoindex on;
-    autoindex_exact_size off;
-    autoindex_localtime on;
-    limit_except POST {          #相当于只允许底下允许列表里的使用除了post外的其他方法
-    allow 192.168.112.1;         #只有浏览器可以使用除了post外的其他方法(get delete)，其他人只能用post
-    deny all;
-}
-}
-[root@localhost conf.d]# systemctl restart nginx
-
-
-# 观察现象
-curl file.test.com/download
-curl file.test.com/download -X POST -d "hello"
-两次报错不一致，一个403一个404
-
-# 
-cd /apps/nginx/html/www
-touch f1
-touch f2
-vim /apps/nginx/conf.d/www.conf
-
-将    root /apps/nginx/html/www;改成    alias /apps/nginx/html/www;
-浏览器测试http://file.test.com/download/，能否访问到get请求
-```
-
-- 是否启用asynchronous file I/O(AIO)功能，需要编译开启`--with-file-aio`
-- 在读取文件的时候使用异步可以提高效率
-
-```shell
-aio on | off;
-```
-
-```shell
-[root@localhost nginx-1.22.0]# cd /usr/local/src/nginx-1.22.0 
-[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
---user=nginx \
---group=nginx \
---with-http_ssl_module \
---with-http_v2_module \
---with-http_realip_module \
---with-http_stub_status_module \
---with-http_gzip_static_module \
---with-pcre \
---with-stream \
---with-stream_ssl_module \
---with-stream_realip_module \
---with-file-aio
-[root@localhost nginx-1.22.0]# make -j 2 && make install
-[root@localhost nginx-1.22.0]# nginx -V
-nginx version: slsnginx/1.22.0
-built by gcc 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC)
-built with OpenSSL 1.0.2k-fips  26 Jan 2017
-TLS SNI support enabled
-configure arguments: --prefix=/apps/nginx --user=nginx --group=nginx --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_stub_status_module --with-http_gzip_static_module --with-pcre --with-stream --with-stream_ssl_module --with-stream_realip_module --with-file-aio
-#支持file-aio了
-[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/www.conf
-server {
-  listen 80;
-  server_name file.test.com;
-  aio on;
-...
-}
-```
-
-- directio是在写文件到磁盘的时候大小大于size的时候，直接写磁盘，而非写缓存
-
-```shell
-directio size | off;
-```
-
-- Nginx支持对磁盘中的文件进行缓存
-
-```shell
-open_file_cache on;    # 是否缓存打开过的文件信息
-open_file_cache max=N [inactive=time];
-#nginx可以缓存以下三种信息：
-#1. 文件元数据，文件的描述符，文件大小和最近一次的修改时间
-#2. 打开的目录结构
-#3. 没有找到的或者没有权限访问的文件相关信息
-max=N;    # 可缓存的缓存项上限数量；达到上限后会使用LRU(Least recently used,最近最少使用)算法实现管理
-inactive=time;    # 缓存项的非活动时长，在此处指定的时长内未被命中的或命中的次数少于open_file_cache_min_uses指令所指定的次数的缓存项即为非活动项，将被删除
-open_file_cache_valid time;  #缓存项有效性的检查验证频率，默认值为60s
-open_file_cache_errors on | off；   #是否缓存查找时发生错误的文件一类的信息，默认值为off
-open_file_cache_min_uses number;   # open_file_cache指令的inactive参数指定的时长内，至少被命中此处指定的次数方可被归类为活动项，默认值为1
-```
-
-范例：
-
-```shell
-open_file_cache max=10000 inactive=60s;
-open_file_cache_vaild 60s;
-open_file_cache_min_uses 5;
-open_file_cache_errors off;
-```
-
-
-
-# Nginx高级配置
-
-## Nginx状态页
-
-基于nginx模块ngx_http_stub_status_ module实现，在编译安装nginx的时候需要添加编译参数--with-http_stub_status_module,否则配置完成之后监测会是提示语法错误
-
-注意:状态页显示的是整个服务器的状态，而非虚拟主机的状态
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
-server {
-    listen 80;
-    server_name status.test.com;
-
-    location /status {
-        stub_status on;
-        # 开启nginx状态页显示
-        allow 192.168.88.0/24;
-        deny all;
-    }
-}
-
-[root@localhost ~]# vim /etc/hosts
-192.168.88.140 status.test.com
-[root@localhost download]# curl http://status.test.com/status
-Active connections: 1
-server accepts handled requests
- 1 1 1
-Reading: 0 Writing: 1 Waiting: 0
-```
-
-<img src="Nginx/FjEpRmUrjJTJxPnz.png!thumbnail" alt="img" style="zoom:150%;" />
-
-- Active connections: 2 表示Nginx正在处理的活动连接数2个。
-- server 2 表示Nginx启动到现在共处理了2个连接
-- accepts 2 表示Nginx启动到现在共成功创建2次握手
-- handled requests 1 表示总共处理了 1 次请求
-- Reading:Nginx 读取到客户端的 Header 信息数，数值越大，说明排队越长，性能不足
-- Writing:Nginx 返回给客户端 Header 信息数，数值越大，说明访问量越大
-- Waiting:Nginx 已经处理完正在等候下一次请求指令的驻留链接（开启keep-alive的情况下，这个值等于Active-(Reading+Writing)）
-
-## Nginx第三方模块
-
-第三方模块是对nginx的功能扩展，第三方模块需要在编译安装Nginx的时候使用参数--add-module=PATH指定路径添加，有的模块是由公司的开发人员针对业务需求定制开发的，有的模块是开源爱好者开发好之后上传到github进行开源的模块，nginx支持第三方模块需要从源码重新编译支持.
-
-比如:开源的**echo模块：**https://github.com/openresty/echo-nginx-module
-
-```shell
-[root@localhost nginx-1.22.0]# vim /apps/nginx/conf.d/echo.conf
-server {
-    listen 80;
-    server_name echo.test.com;
-
-    location /main {
-        index index.html;
-        default_type text/html;
-        echo "hello world,main-->";
-        echo $remote_addr;
-        echo_reset_timer;
-        # 将计时器开始时间重置为当前时间
-
-        echo_location /sub1;
-        echo_location /sub2;
-        echo "took $echo_timer_elapsed sec for total.";
-}
-    location /sub1 {
-        echo_sleep 2;
-        echo hello;
-}
-    location /sub2 {
-        echo_sleep 1;
-        echo world;
-}
-}
-
-
-# 重新编译nginx，以前的配置文件不会丢失
-[root@localhost ~]# cd /usr/local/src
-[root@localhost src]# wget https://github.com/openresty/echo-nginx-module/archive/refs/heads/master.zip
-[root@localhost src]# unzip echo-nginx-module-master.zip
-[root@localhost src]# mv echo-nginx-module-master echo-nginx-module
-[root@localhost src]# cd nginx-1.22.0
-[root@localhost nginx-1.22.0]# ./configure --prefix=/apps/nginx \
---user=nginx \
---group=nginx \
---with-http_ssl_module \
---with-http_v2_module \
---with-http_realip_module \
---with-http_stub_status_module \
---with-http_gzip_static_module \
---with-pcre \
---with-stream \
---with-stream_ssl_module \
---with-stream_realip_module \
---add-module=/usr/local/src/echo-nginx-module
-[root@localhost nginx-1.22.0]# make -j 2 && make install
-
-
-# 进行访问测试
-[root@localhost ~]# echo "192.168.88.10 echo.test.com" >> /etc/hosts
-[root@localhost ~]# curl echo.test.com/main
-hello world,main-->
-192.168.88.140
-hello
-world
-took 3.008 sec for total.
-
-```
-
-### 内置变量
-
-官方文档：https://nginx.org/en/docs/varindex.html
-
-常用内置变量
-
-```shell
-$remote_addr;
-# 存放了客户端的地址，注意是客户端的公网IP
-$proxy_add_x_forwarded_for;
-# 此变量表示将客户端IP追加请求报文中X-Forwarded-For首部字段，多个IP之间用逗号分隔，如果请求中没有X-Forwarder-For，就使用$remote_addr
-$args;
-# 变量中存放了URL中的参数
-$document_root;
-# 保存了针对当前资源的系统根目录
-$document_uri;
-# 保存了当前请求中不包含参数的URI,注意是不包含请求的指令，比如/img/logo.png
-$host;
-# 存放了请求的host名称
-limit_rate 10240;
-echo $limit_rate;
-# 如果nginx服务器使用limit_rate配置了显示网络速率，则会显示，如果没有设置，则显示0
-$remote_port;
-# 客户端请求Nginx服务器时随机打开的端口，这是每个客户端自己的端口
-$remote_user;
-# 已经经过Auth Basic Module验证的用户名
-$request_body_file;
-# 做反向代理时发给后端服务器的本地资源的名称
-$request_method;
-# 请求资源的方式，GET/PUT等等
-$request_filename;
-# 当前请求的资源文件的磁盘路径，由root或alias指令与URL请求生成的文件绝对路径
-# /apps/nginx/html/www/index.html
-$request_uri;
-# 包含请求参数的原始URI,不包含主机名，相当于:$document_uri?$args
-$scheme;
-# 请求的协议，例如：http,https,ftp等等
-$server_protocol;
-# 保存了客户端请求资源使用的协议版本，例如：HTTP/1.0,HTTP/1.1,HTTP/2.0等等
-$server_addr;
-# 保存了服务器的IP地址
-$server_name;
-# 请求的服务器的主机名
-$server_port;
-# 请求的服务器的端口号
-$http_<name>
-# name为任意请求报文首部字段，表示记录请求报文的首部字段
-$http_user_agent;
-# 客户端浏览器的详细信息
-$http_cookie;
-# 客户端的cookie信息
-$cookie_<name>
-# name为任意请求报文首部字段cookie的key名
-```
-
-### 自定义变量
-
-假如需要自定义变量名和值，使用指令set $variable value;
-
-语法格式：
-
-```shell
-Syntax:set $varible value;
-Default: -
-Context: server, location, if
-```
-
-范例：
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf.d/www.conf
-set $name zs;
-echo $name;
-set $my_port $server_port;
-echo $my_port;
-echo "$server_name:$server_port";
-```
-
-## Nginx自定义访问日志
-
-访问日志是记录客户端即用户的具体请求内容信息，全局配置模块中的error_log是记录nginx服务器运行时的日志保存路径和记录日志的level,因此有着本质的区别，而且Nginx的错误日志一般只有一个， 但是访问日志可以在不同server中定义多个，定义一个日志需要使用access_log指定日志的保存路径，使用log_format指定日志的格式,格式中定义要保存的具体日志内容。
-
-访问日志由ngx_http_log_module 模块实现
-
-官方帮助文档：http://nginx.org/en/docs/http/ngx_http_log_module.html
-
-语法格式：
-
-```shell
-Syntax:	access_log path [format [buffer=size] [gzip[=level]] [flush=time] [if=condition]];
-access_log off;
-Default:	
-access_log logs/access.log combined;
-Context:	http, server, location, if in location, limit_except
-```
-
-### 自定义默认格式日志
-
-如果是要保留日志的源格式，只是添加相应的日志内容，则配置如下:
-
-```shell
-[root@localhost ~]# vim /apps/nginx/conf/nginx.conf
-log_format  nginx_format1  '$remote_addr - $remote_user [$time_local] "$request" '
-                  '$status $body_bytes_sent "$http_referer" '
-                  '"$http_user_agent" "$http_x_forwarded_for"'
-                  '$server_name:$server_port';
-access_log  logs/access.log  nginx_format1;
-# 重启nginx并访问测试日志格式
-# /apps/nginx/logs/access.log
-```
-
-### 自定义json格式日志
-
-Nginx的默认访问日志记录内容相对比较单一， 默认的格式也不方便后期做日志统计分析，生产环境中通常将nginx日志转换为json日志，然后配合使用ELK做日志收集-统计-分析。
-
-```shell
-log_format access_json '{"@timestamp":"$time_iso8601",'
-  '"host":"$server_addr",'
-  '"clientip":"$remote_addr",'
-  '"size":$body_bytes_sent,'
-  '"responsetime":$request_time,'
-  '"upstreamhost":"$upstream_response_time",'
-  '"upstreamhost":"$upstream_addr",'
-  '"http_host":"$host",'
-  '"uri":"$uri",'
-  '"xff":"$http_x_forwarded_for",'
-  '"referer":"$http_referer",'
-  '"tcp_xff":"$proxy_protocol_addr",'
-  '"status":"$status"}';
-access_log  logs/access.log  access_json;
-```
-
-## Nginx压缩功能
-
-Nginx支持对指定类型的文件进行压缩，然后再传输给客户端，而且压缩还可以设置压缩比例，压缩后的文件大小将比源文件显著变小，这样有助于降低出口带宽的利用率，不过会占用相应的CPU资源。
-
-Nginx对文件的压缩功能是依赖于模块ngx_http_gzip_module
-
-官方文档：https://nginx.org/en/docs/http/ngx_http_gzip_module.html
-
-```shell
-# 启用或禁用gzip压缩，默认关闭
-gzip on | off;
-# 压缩比由低到高1到9，默认为1
-gzip_comp_level level;
-# 禁用IE6 gzip功能
-gzip_disable "MSIE [1-6]\.";
-# gzip压缩的最小文件，小于设置值的文件将不会压缩
-gzip_min_length 1k;
-# 启用压缩功能时，协议的最小版本，默认HTTP/1.1
-gzip_http_version 1.0 | 1.1;
-# 指定Nginx服务需要向服务器申请的缓存空间的个数和大小，平台不同，默认：32 4k或者 16 8k;
-gzip_buffers number size;
-# 指明仅对哪些类型的资源执行压缩操作，默认为gzip_types text/html,不用显示指定，否则出错
-gzip_types mime-type ...;
-# 如果启用压缩，是否在相应报文首部插入"vary: Accept-Encoding",一般建议打开
-gzip_vary on | off
-# 重启nginx并进行访问测试压缩功能
-[root@localhost ~]# curl -I --compressed 127.0.0.1
-```
-
-### 案例-压缩对比
-
-1. 编写配置文件，创建两个虚拟机主机：site1和site2，其中site1开启gzip压缩，site2不开启
-
-```bash
-[root@localhost site1]# vim /apps/nginx/conf.d/test.conf
-server {
-        listen 80;
-        server_name www.site1.com;
-        gzip on;
-        gzip_comp_level 9;
-        gzip_vary on;
-        gzip_types text/html;
-        location / {
-                index index.html;
-                root /data/site1;
-        }
-}
-server {
-        listen 80;
-        server_name www.site2.com;
-        location / {
-                root /data/site2;
-        }
-}
-
-
-# 创建网站目录和文件
-[root@localhost ~]# mkdir -p /apps/nginx/html/{site1,site2}
-[root@localhost ~]# yum install -y tree
-[root@localhost ~]# tree /etc/ > /apps/nginx/html/site1/site1.html
-[root@localhost ~]# tree /etc/ > /apps/nginx/html/site2/site2.html
-
-# 更改hosts文件
-[root@localhost ~]# vim /etc/hosts
-192.168.88.10 www.site1.com
-192.168.88.10 www.site2.com
-```
-
-2. 通过curl --compressed访问测试
-
-```bash
-[root@localhost site1]# curl -I --compressed http://www.site1.com/site1.html
-HTTP/1.1 200 OK
-Server: nginx/1.22.0
-Date: Thu, 18 Jul 2024 08:40:04 GMT
-Content-Type: text/html
-Last-Modified: Thu, 18 Jul 2024 08:38:22 GMT
-Connection: keep-alive
-Vary: Accept-Encoding
-ETag: W/"6698d47e-1ee6a"
-Content-Encoding: gzip
-
-[root@localhost site1]# curl -I --compressed http://www.site2.com/site2.html
-HTTP/1.1 200 OK
-Server: nginx/1.22.0
-Date: Thu, 18 Jul 2024 08:40:45 GMT
-Content-Type: text/html
-Content-Length: 126570
-Last-Modified: Thu, 18 Jul 2024 08:38:09 GMT
-Connection: keep-alive
-ETag: "6698d471-1ee6a"
-Accept-Ranges: bytes
-```
-
-其中site1站可以看到响应报文中提示**Content-Encoding: gzip**
-
-## HTTPS功能
-
-Web网站的登录页面都是使用https加密传输的，加密数据以保障数据的安全，HTTPS能够加密信息，以免敏感信息被第三方获取,所以很多银行网站或电子邮箱等等安全级别较高的服务都会采用HTTPS协议，HTTPS其实是有两部分组成: HTTP + SSL/ TLS,也就是在HTTP上又加了一层处理加密信息的模块。服务端和客户端的信息传输都会通过TLS进行加密，所以传输的数据都是加密后的数据。
-
-![img](Nginx/M3HekoB0Z7ZfRVpa.png!thumbnail)
-
-### HTTPS配置参数
-
-nginx的https功能基于模块ngx_http_ssl_module实现，因此如果是编译安装的nginx要使用参数ngx_http_ssl_module开启ssI功能，但是作为nginx的核心功能，yum安装的nginx默认就是开启的，编译安装的nginx需要指定编译参数--with-http_ssl_module开启
-
-官方文档：https://nginx.org/en/docs/http/ngx_http_ssl_module.html
-
-配置参数如下：
-
-```shell
-ssl on | off;
-listen 443 ssl;
-# 为指定的虚拟主机配置是否启用ssl功能，此功能在1.15.0废弃，使用listen [ssl]替代。
-ssl_certificate /path/to/file;
-# 当前虚拟主机使用使用的公钥文件，一般是crt文件
-ssl_certificate_key /path/to/file;
-# 当前虚拟主机使用的私钥文件，一般是key文件
-ssl_protocols [SSLv2] [SSLv3] [TLSv1] [TLSv1.1] [TLSv1.2];
-# 支持ssl协议版本，早期为ssl现在是TSL，默认为后三个
-ssl_session_cache off | none | [builtin[:size]] [shared:name:size];
-# 配置ssl缓存
-	off： 
-	# 关闭缓存
-	none: 
-	# 通知客户端支持ssl session cache，但实际不支持
-	builtin[:size]：
-	# 使用OpenSSL内建缓存，为每worker进程私有
-	[shared:name:size]：
-	# 在各worker之间使用一个共享的缓存，需要定义一个缓存名称和缓存空间大小，一兆可以存储4000个会话信息，多个虚拟主机可以使用相同的缓存名称。
-ssl_session_timeout time;
-# 客户端连接可以复用ssl session cache中缓存的有效时长，默认5m
-```
-
-### 自签名证书
-
-- 生成ca证书
-
-```shell
-[root@localhost ~]# cd /apps/nginx
-[root@localhost nginx]# mkdir certs && cd certs
-[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 -out ca.crt
-```
-
-- 生成证书请求文件
-
-```shell
-[root@localhost certs]# openssl req -newkey rsa:4096 -nodes -sha256 -keyout iproute.cn.key -out iproute.cn.csr
-```
-
-- 签发证书
-
-```shell
-[root@localhost certs]# openssl x509 -req -days 36500 -in iproute.cn.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out iproute.cn.crt
-[root@localhost certs]# cat iproute.cn.crt ca.crt > iproute.crt
-```
-
-- 验证证书内容
-
-```shell
-[root@localhost certs]# openssl x509 -in iproute.cn.crt -noout -text
-```
-
-### Nginx证书配置
-
-```shell
-[root@localhost certs]# vim /apps/nginx/conf.d/ssl.conf
-server {
-        listen 80;
-        listen 443 ssl;
-        ssl_certificate /apps/nginx/certs/iproute.crt;
-        ssl_certificate_key /apps/nginx/certs/iproute.cn.key;
-        ssl_session_cache shared:sslcache:20m;
-        ssl_session_timeout 10m;
-        root /apps/nginx/html;
-}
-```
-
-#### windows验证
-
-<img src="Nginx/image-20250207181434088.png" alt="image-20250207181434088" style="zoom:80%;" />
-
-## 虚拟主机
-
-```shell
-[root@localhost conf.d]# ll /apps/nginx/conf.d
-总用量 12
--rw-r--r--. 1 root root 107 9月  25 16:45 bbs.conf
--rw-r--r--. 1 root root 109 9月  25 16:45 blog.conf
--rw-r--r--. 1 root root 107 9月  25 16:44 www.conf
-[root@localhost conf.d]# cat *.conf
-server {
-listen      *:8080;
-server_name bbs.eagle.com;
-location / {
-root /apps/html/bbs;
-index index.html;
-}
-}
-
-server {
-listen      *:8080;
-server_name blog.eagle.com;
-location / {
-root /apps/html/blog;
-index index.html;
-}
-}
-
-server {
-listen      *:8080;
-server_name www.eagle.com;
-location / {
-root /apps/html/www;
-index index.html;
-}
-}
-```
-
-# LNMP架构概述
-
-## 什么是LNMP
+# LNMP 架构概述
 
 LNMP是一套技术的组合，L=Linux、N=Nginx、M=MySQL、P=PHP
 
-## LNMP架构是如何工作的
+## 如何工作
 
-- 首先nginx服务是不能处理动态请求，那么当用户发起动态请求时，nginx无法处理
-- 当用户发起http请求，请求会被nginx处理，如果是静态资源请求nginx则直接返回，如果是动态请求nginx则通过fastcgi协议转交给后端的PHP程序处理
+- 首先 nginx 服务是不能处理动态请求，那么当用户发起动态请求时，nginx 无法处理
+- 当用户发起 http 请求，请求会被 nginx 处理，如果是静态资源请求 nginx 则直接返回，如果是动态请求 nginx 则通过 fastcgi 协议转交给后端的 PHP 程序处理
 
-![image-20210711094454191](Nginx/image-20210711094454191.png)
+![image-LNMP工作流程01](Nginx/LNMP工作流程01.png)
 
-## Nginx与fastcgi详细工作流程
+## 工作流程
 
-![images2015.cnblogs](Nginx/images2015.cnblogs.jpg)
+![image-LNMP工作流程02](Nginx/LNMP工作流程02.png)
 
-1. 用户通过http协议发起请求，请求会先抵达LNMP架构中的nginx；
-2. nginx会根据用户的请求进行location规则匹配；
-3. location如果匹配到请求是静态，则由nginx读取本地直接返回；
-4. location如果匹配到请求是动态，则由nginx将请求转发给fastcgi协议；
-5. fastcgi收到请求交给php-fpm管理进程，php-fpm管理进程接收到后会调用具体的工作进程wrapper；
-6. wrapper进程会调用PHP程序进行解析，如果只是解析代码，php直接返回；
-7. 如果有查询数据库操作，则由php连接数据库（用户 密码 ip）发起查询的操作；
-8. 最终数据由mysql-->php-->php-fpm-->fastcgi-->nginx-->http-->user
+1. 用户通过 http 协议发起请求，请求会先抵达 LNM P架构中的nginx
+2. nginx 会根据用户的请求进行location规则匹配
+3. location 如果匹配到请求是静态，则由 nginx 读取本地直接返回
+4. location 如果匹配到请求是动态，则由 nginx 将请求转发给 fastcgi 协议
+5. fastcgi 收到请求交给 php-fpm 管理进程，php-fpm 管理进程接收到后会调用具体的工作进程 wrapper
+6. wrapper 进程会调用 PHP 程序进行解析，如果只是解析代码，php 直接返回
+7. 如果有查询数据库操作，则由 php 连接数据库（用户 密码 ip）发起查询的操作
 
-# LNMP架构环境部署
+## 部署安装
 
-## 安装nginx
 
-参考课件开始部分中的编译安装，当然也可以通过yum安装，但是yum安装的时候需要注意配置文件的路径
-
-自行完成nginx的编译安装...
-
-## 安装php
-
-1. 安装php8.0全家桶
-
-```bash
-[root@localhost ~]# yum install -y epel-release
-
-# 安装php仓库
-[root@localhost ~]# yum install -y dnf-utils http://rpms.remirepo.net/enterprise/remi-release-8.rpm --skip-broken
-[root@localhost ~]# yum install -y php php-cli php-curl php-mysqlnd php-gd php-opcache php-zip php-intl
-```
-
-2. 更改php配置文件，启动监控9000端口
-
-```bash
+```shell
+# 安装 nginx：如果编译安装可以跳过
+[root@localhost ~]# yum install nginx -y
+# 安装 php 全家桶
+[root@localhost ~]# yum install php* -y
+# 更新 php-fmp listen 配置项
 [root@localhost ~]# vim /etc/php-fpm.d/www.conf
 ......
 ;listen = /run/php-fpm/www.sock
 listen = 9000
 ......
-```
-
-3. 更改php-fpm用户，与nginx保持一致
-
-```bash
-[root@localhost ~]# sed -i '/^user/c user = nginx' /etc/php-fpm.d/www.conf
-[root@localhost ~]# sed -i '/^group/c group = nginx' /etc/php-fpm.d/www.conf
-```
-
-4. 启动php-fpm管理器
-
-```bash
 [root@localhost ~]# systemctl enable --now php-fpm
-[root@localhost ~]# systemctl status php-fpm
-● php-fpm.service - The PHP FastCGI Process Manager
-     Loaded: loaded (/usr/lib/systemd/system/php-fpm.service; enabled; pr>
-     Active: active (running) since Fri 2025-02-07 19:26:10 CST; 10s ago
-   Main PID: 34396 (php-fpm)
-     Status: "Processes active: 0, idle: 5, Requests: 0, slow: 0, Traffic>
-      Tasks: 6 (limit: 10888)
-     Memory: 29.1M
-        CPU: 60ms
-     CGroup: /system.slice/php-fpm.service
-             ├─34396 "php-fpm: master process (/etc/php-fpm.conf)"
-             ├─34397 "php-fpm: pool www"
-             ├─34398 "php-fpm: pool www"
-             ├─34399 "php-fpm: pool www"
-             ├─34400 "php-fpm: pool www"
-             └─34401 "php-fpm: pool www"
-
-# 检查9000端口号是否监听
-[root@localhost ~]# ss -nlt
-State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port  Process
-LISTEN  0       128            0.0.0.0:22          0.0.0.0:*
-LISTEN  0       511            0.0.0.0:80          0.0.0.0:*
-LISTEN  0       511                  *:9000              *:*
-LISTEN  0       128               [::]:22             [::]:*
-```
-
-## 安装Mariadb数据库
-
-```bash
-# 安装mariadb数据库软件
+# 安装 marinedb 数据库
 [root@localhost ~]# yum install -y mariadb-server mariadb
-
-# 启动数据库并且设置开机自启动
 [root@localhost ~]# systemctl enable --now mariadb
-
-# 设置mariadb的密码
+# 设置数据库 root 用户密码
 [root@localhost ~]# mysqladmin password '123456'
-
-# 验证数据库是否工作正常
 [root@localhost ~]# mysql -uroot -p123456 -e "show databases;"
 +--------------------+
 | Database           |
@@ -1670,40 +1370,64 @@ LISTEN  0       128               [::]:22             [::]:*
 | mysql              |
 | performance_schema |
 +--------------------+
+# 准备测试页面
+[root@localhost ~]# mkdir -pv /data/nginx/lnmp
+[root@localhost ~]# cat << EOF > /data/nginx/lnmp/index.php
+<?php
+    phpinfo();
+?>
+EOF
+# 测试 index.php 运行正确
+[root@localhost ~]# php /data/nginx/lnmp/index.php 
+# 添加 nginx vhost 配置文件：将 php 请求转给 php-fpm 处理
+[root@localhost ~]# cat << EOF > /etc/nginx/conf.d/php.conf
+server {
+    listen 80;
+    server_name php.iproot.cn;
+    root /data/nginx/lnmp;
+
+    location / {
+        index index.php index.html;
+        }
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+        }
+}
+EOF
+[root@localhost ~]# nginx -s reload
+# 测试验证
+[root@localhost ~]# curl -I -H 'Hostname: php.iproute.cn' 172.16.175.129
+HTTP/1.1 200 OK
+Server: nginx/1.20.1
+
 ```
 
-# LNMP架构环境配置
+## 相关配置
 
-- 在将nginx与PHP集成的过程中，需要先了解fastcgi代理配置语法
+**设置 fastcgi 服务器地址**
 
-## 设置fastcgi服务器的地址
-
-- 该地址可以指定为域名或IP地址，以及端口
-
-```bash
+```shell
 Syntax: fastcgi_pass address;
 Default:-
 Context:location,if in location
-#语法示例
+# 语法示例：可以指定为域名或IP地址以及端口
 fastcgi_pass location:9000;
 fastcgi_pass unix:/tmp/fastcgi.socket;
 ```
 
-## 设置fastcgi默认的首页文件
+**设置 fastcgi 默认首页文件**
 
-- 需要结合fastcgi_param一起设置
-
-```bash
+```shell
 Syntax: fastcgi_index name;
 Default:-
 Context:http,server,location
 ```
 
-## 通过fastcgi_param设置变量
+**设置 fastcgi_param 传递变量**
 
-- 将设置的变量传递到后端的fastcgi服务器
-
-```bash
+```shell
 Syntax: fastcgi_param parameter value [if_not_empty];
 Default:-
 Context:http,server,location
@@ -1712,127 +1436,51 @@ fastcgi_index index.php;
 fastcgi_param SCRIPT_FILENAME /code$fastcgi_script_name;
 ```
 
-## php探针测试
+# 数据库管理应用
 
-为了测试php环境是否正常，我们可以编写一个php文件，然后查看是否运行正常来进行判断
+为了方便的使用数据库，我们可以安装数据库图形化管理工具 phpmyadmin
 
-```bash
-# 首先为php探针创建一个虚拟主机
-[root@localhost ~]# vim /apps/nginx/conf.d/php.conf
-server {
-        listen 80;
-        server_name php.iproot.cn;
-        root /code;
+## 安装部署
 
-        location / {
-                index index.php index.html;
-         }
-
-        location ~ \.php$ {
-                fastcgi_pass 127.0.0.1:9000;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-         }
-}
-
-# 测试nginx配置是否正确
-[root@localhost ~]# nginx -t
-
-# 重启nginx服务
-[root@localhost ~]# systemctl restart nginx
-```
-
-编写php文件，在php文件中编写如下代码
-
-```php
-[root@localhost ~]# mkdir /code
-[root@localhost ~]# vim /code/info.php
-<?php
-    phpinfo();
-?>
-```
-
-在浏览器中访问`php.iproot.cn`记得更改windows的hosts文件，可以得到如下的结果：
-
-![image-20211106103800569](Nginx/image-20211106103800569.png)
-
-<img src="Nginx/image-20250207194233281.png" alt="image-20250207194233281" style="zoom:80%;" />
-
-## 测试数据库连接
-
-为了确保php能正确访问数据库，我们可以编写如下php代码用于验证数据库是否正确连接
-
-```php
-[root@localhost ~]# vim /code/mysql.php
-<?php
-    $servername = "localhost";
-    $username = "root";
-    $password = "123456";
-
-    // 创建连接
-    $conn = mysqli_connect($servername, $username, $password);
-
-    // 检测连接
-    if (!$conn) {
-         die("Connection failed: " . mysqli_connect_error());
-    }
-    echo "连接MySQL...成功！";
-?>
-```
-
-使用浏览器访问，可以得到数据库连接的结果:
-
-<img src="Nginx/image-20250207194355266.png" alt="image-20250207194355266" style="zoom:80%;" />
-
-## 安装phpmyadmin
-
-为了方便的使用数据库，我们可以安装数据库图形化管理工具phpmyadmin
-
-```bash
+```shell
 # 为数据库管理工具创建虚拟主机
 [root@localhost ~]# vim /apps/nginx/conf.d/mysql.conf
 server {
-        listen 80;
-        server_name mysql.iproot.cn;
-        root /code/phpmyadmin;
+    listen 80;
+    server_name mysql.iproot.cn;
+    root /code/phpmyadmin;
 
-        location / {
-                index index.php index.html;
-         }
+    location / {
+        index index.php index.html;
+    }
 
-        location ~ \.php$ {
-                fastcgi_pass 127.0.0.1:9000;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-         }
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
 }
-
-# 检查nginx配置文件，并且重启
 [root@localhost ~]# nginx -t
-[root@localhost ~]# systemctl restart nginx
-
-
 # 下载phpmyadmin源码
 [root@localhost ~]# cd /code/
 [root@localhost code]# wget https://files.phpmyadmin.net/phpMyAdmin/5.1.1/phpMyAdmin-5.1.1-all-languages.zip
-
 # 解压软件包，并且重命名
 [root@localhost phpmyadmin]# unzip phpMyAdmin-5.1.1-all-languages.zip
 [root@localhost phpmyadmin]# mv phpMyAdmin-5.1.1-all-languages phpmyadmin
-
 # 添加session文件夹权限
 [root@localhost phpmyadmin]# chown nginx.nginx /var/lib/php/session
 ```
 
-下面浏览器访问phpmyadmin页面，同样记得更改windows下的hosts文件
+下面浏览器访问 phpmyadmin 页面，同样记得更改 windows下的 hosts 文件
 
-<img src="Nginx/image-20250207195412139.png" alt="image-20250207195412139" style="zoom:80%;" />
+<img src="Nginx/phpmyadmin登录页面.png" alt="image-phpmyadmin登录页面" style="zoom:80%;" />
 
-输入数据库用户名`root`和密码`123456`就可以进入图形化数据库管理页面了
+输入数据库用户名 `root` 和密码 `123456` 就可以进入图形化数据库管理页面了
 
-<img src="Nginx/image-20250207195442656.png" alt="image-20250207195442656" style="zoom:80%;" />
+<img src="Nginx/phpmyadmin管理页面.png" alt="image-phpmyadmin管理页面" style="zoom:80%;" />
 
-# 安装博客系统
+
+# 博客系统
 
 ## 部署虚拟主机
 
@@ -1840,18 +1488,17 @@ server {
 # 为博客创建虚拟主机
 [root@localhost ~]# vim /apps/nginx/conf.d/typecho.conf
 server {
-        listen 80;
-        server_name blog.iproot.cn;
-        root /code/typecho;
-        index index.php index.html;
+    listen 80;
+    server_name blog.iproot.cn;
+    root /code/typecho;
+    index index.php index.html;
 
-        location ~ .*\.php(\/.*)*$ {
-                root /code/typecho;
-                fastcgi_pass   127.0.0.1:9000;
-                fastcgi_index  index.php;
-                fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-        }
+    location ~ .*\.php(\/.*)*$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
 }
 
 # 检查nginx配置文件，并且重启
@@ -1872,27 +1519,27 @@ server {
 
 点击数据库，输入数据库名之后，就可以点击创建
 
-<img src="Nginx/image-20250207195822737.png" alt="image-20250207195822737" style="zoom:80%;" />
+<img src="Nginx/创建typecho数据库.png" alt="image-创建typecho数据库" style="zoom:80%;" />
 
 ## 安装博客系统
 
 下面就可以开始进入网站安装的部分了，访问博客系统页面
 
-<img src="Nginx/image-20250207195859686.png" alt="image-20250207195859686" style="zoom:80%;" />
+<img src="Nginx/安装博客系统.png" alt="image-安装博客系统" style="zoom:80%;" />
 
 赋予网站根目录下usr/uploads目录权限
 
-```bash
+```shell
 [root@localhost typecho]# chmod a+w usr/uploads/
 ```
 
 继续下一步，填写数据库密码和网站后台管理员密码
 
-<img src="Nginx/image-20250207200047813.png" alt="image-20250207200047813" style="zoom:80%;" />
+<img src="Nginx/设置网站后台管理员密码.png" alt="image-设置网站后台管理员密码" style="zoom:80%;" />
 
 点击开始安装之后，会出现了如下页面，这个是因为php的用户是nginx用户，而/code/typecho文件夹是root用户的，所以这个网站根本没有权限保存数据相关的配置到文件夹中
 
-<img src="Nginx/image-20250207200142034.png" alt="image-20250207200142034" style="zoom:80%;" />
+<img src="Nginx/初始化配置.png" alt="image-初始化配置" style="zoom:80%;" />
 
 方法一：直接将typecho文件夹赋予nginx权限
 
@@ -1900,7 +1547,7 @@ server {
 
 直接在/code/typecho下创建`config.inc.php`文件，然后将网页提示内容写入这个文件中
 
-```bash
+```shell
 [root@localhost typecho]# vim /code/typecho/config.inc.php
 复制网页上的内容进去
 ```
@@ -1959,7 +1606,7 @@ Typecho-Butterfly-main  Typecho-Butterfly-main.zip  default
 
 <img src="Nginx/image-20250118221958932.png" alt="image-20250118221958932" style="zoom:80%;" />
 
-# 安装网盘
+# 网盘服务
 
 ## 部署虚拟主机
 
@@ -2035,6 +1682,6 @@ server {
 
 ![image-20211106114944358](Nginx/image-20211106114944358.png)
 
-# 总结
+# 友情提示
 
-如何各位同学不是搭建在自己虚拟机上的，是去租用阿里云或者腾讯云，直接搭建，并且购买域名，就可以让自己的网站在互联网上永远在线了
+如何各位同学不是搭建在自己虚拟机上的，是去租用阿里云或者腾讯云，直接搭建，并且购买域名，就可以让自己的网站在互联网上永远在线
