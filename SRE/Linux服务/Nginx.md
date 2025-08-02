@@ -364,6 +364,7 @@ location ~* \.(gif|jpg|jpeg)$ {
     [ configuration E ]
 }
 # \: 转义字符
+# 实际访问路径：root + 请求的路径
 ```
 
 **测试验证**
@@ -373,6 +374,7 @@ location ~* \.(gif|jpg|jpeg)$ {
 - the "`/documents/document.html`" request will match configuration C
 - the "`/images/1.gif`" request will match configuration D
 - the "`/documents/1.jpg`" request will match configuration E
+
 
 
 # 访问控制
@@ -689,7 +691,7 @@ took 3.008 sec for total.
 
 ## Alias
 
-**alias：**定义路径别名，会把访问的路径重新定义到其指定的路径，文档映射的另一种机制；仅能用于location上下文，此指令使用较少
+**alias：** 定义路径别名，会把访问的路径重新定义到其指定的路径，文档映射的另一种机制，仅能用于location上下文，此指令使用较少
 
 **案例：**
 
