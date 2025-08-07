@@ -27,7 +27,8 @@ if [ ! -f "/usr/bin/cri-dockerd" ]; then
         log_info "使用本地cri-dockerd安装包"
     else
         log_info "本地安装包不存在，开始下载cri-dockerd安装包"
-        wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.9/cri-dockerd-0.3.9.amd64.tgz
+        # wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.9/cri-dockerd-0.3.9.amd64.tgz
+        download_file cri-dockerd-0.3.9.amd64.tgz
     fi
     tar -xf cri-dockerd-0.3.9.amd64.tgz
     cp cri-dockerd/cri-dockerd /usr/bin/

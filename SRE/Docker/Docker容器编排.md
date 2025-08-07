@@ -392,29 +392,29 @@ d1d6339ba0d7   lnmp-php       "docker-php-entrypoi…"   4 minutes ago   Up 4 mi
 109672c0b1f0   mysql:5.7      "docker-entrypoint.s…"   4 minutes ago   Up 4 minutes   3306/tcp, 33060/tcp                   lnmp-mysql-1
 ```
 
-在`/data/lnmp/nginx/conf.d/default.conf`中写入nginx 的配置文件
+在 `/data/lnmp/nginx/conf.d/default.conf` 中写入nginx 的配置文件
 
-```bash
+```shell
 server {
-        listen 80;
-        root /usr/share/nginx/html;
-        location / {
-                index index.php index.html;
-         }
+  listen 80;
+  root /usr/share/nginx/html;
+  location / {
+    index index.php index.html;
+  }
 
-        location ~ \.php$ {
-                fastcgi_pass php:9000;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-         }
+  location ~ \.php$ {
+    fastcgi_pass php:9000;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+  }
 }
 ```
 
 准备探针测试
 
-在`/data/lnmp/nginx/html/info.php`中准备php探针
+在 `/data/lnmp/nginx/html/info.php` 中准备php探针
 
-```bash
+```shell
 <?php
 	phpinfo();
 ?>
@@ -424,14 +424,14 @@ server {
 
 在`/data/lnmp/nginx/html/mysql.php`中准备php探针
 
-```bash
+```shell
 <?php
-    $dbhost = "mysql";
-    $dbuser = "root";
-    $dbpass = "123456";
-    $db = "login";
-    $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $db) or exit("数据库连接失败！");
-    echo "数据库连接成功";
+  $dbhost = "mysql";
+  $dbuser = "root";
+  $dbpass = "123456";
+  $db = "login";
+  $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $db) or exit("数据库连接失败！");
+  echo "数据库连接成功";
 ?>
 ```
 
@@ -439,7 +439,7 @@ server {
 
 所以我们需要定制带有mysqli模块的php，编写如下dockerfile
 
-```bash
+```shell
 FROM php:7.4-fpm
 ENV TZ=Asia/Shanghai
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
@@ -456,7 +456,7 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
   && docker-php-ext-install -j$(nproc) gd mysqli && docker-php-ext-enable mysqli
 ```
 
-然后修改docker-compose.yml文件如下
+然后修改 docker-compose.yml 文件如下
 
 ```yaml
 # docker-compose build lnmp
@@ -506,9 +506,9 @@ volumes:
   dbdata: null
 ```
 
-然后再次运行测试
+测试验证
 
-```bash
+```shell
 [root@localhost lnmp]# docker compose up -d
 [root@localhost lnmp]# docker ps
 CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS         PORTS                                 NAMES

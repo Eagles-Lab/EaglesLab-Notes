@@ -54,7 +54,18 @@ if [ ! -f "/etc/docker/daemon.json" ] || ! grep -q "data-root" "/etc/docker/daem
     "max-size": "100m",
     "max-file": "100"
   },
-  "registry-mirrors": ["https://docker.1panel.live","https://docker.m.daocloud.io"]
+  "registry-mirrors": [
+    "https://docker.1ms.run",
+    "https://docker.1panel.live",
+    "https://docker.xuanyuan.me",
+    "https://dockerproxy.net",
+    "https://docker.fast360.cn",
+    "https://cloudlayer.icu",
+    "https://docker-registry.nmqu.com",
+    "https://hub.amingg.com",
+    "https://docker.amingg.com",
+    "https://docker.hlmirror.com"
+  ]
 }
 EOF
     log_info "已创建Docker daemon配置文件"
