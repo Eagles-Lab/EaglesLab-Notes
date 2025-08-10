@@ -2287,7 +2287,7 @@ print(f"player1周围排名: {around}")
 
 **环境准备脚本**：
 
-```bash
+```shell
 #!/bin/bash
 # setup_redis_app_env.sh - Redis应用实战环境搭建
 
@@ -2814,46 +2814,25 @@ for thread in threads:
 print(f"最终库存: {inventory.get_stock('product_001')}")
 ```
 
-## 总结
+### 发布订阅示例
 
-通过本章的学习，我们深入了解了Redis在实际应用中的各种使用场景：
+**实时消息系统**：
 
-### 缓存应用
-- **缓存策略**：掌握了Cache-Aside、Write-Through、Write-Behind等缓存模式
-- **缓存问题**：学会了处理缓存穿透、击穿、雪崩等常见问题
-- **缓存更新**：了解了不同的缓存更新策略和最佳实践
-- **分布式缓存**：实现了一致性哈希的分布式缓存方案
+```python
+# realtime_chat.py - 实时聊天系统示例
+import redis
+import time
+import threading
+import uuid
+from contextlib import contextmanager
 
-### 会话管理
-- **会话存储**：实现了基于Redis的会话管理系统
-- **分布式会话**：支持跨应用的会话共享和SSO
-- **会话安全**：加强了会话的安全性和防护措施
-- **过期处理**：实现了会话清理和通知机制
-
-### 消息队列
-- **发布订阅**：实现了基本的发布订阅模式
-- **可靠队列**：构建了支持重试和故障恢复的消息队列
-- **延时队列**：实现了延时任务调度系统
-- **消息确认**：保证了消息处理的可靠性
-
-### 分布式锁
-- **基本锁**：实现了简单的分布式锁机制
-- **可重入锁**：支持同一线程的重复获取
-- **红锁算法**：实现了Redlock算法提高可靠性
-- **实际应用**：在库存管理等场景中的应用
-
-### 实时数据处理
-- **实时统计**：实现了多时间粒度的计数器
-- **滑动窗口**：构建了滑动窗口统计系统
-- **排行榜**：实现了动态实时排行榜
-- **性能监控**：提供了实时的性能指标统计
-
-### 实践要点
-1. **选择合适的数据结构**：根据应用场景选择最适合的Redis数据类型
-2. **考虑并发安全**：在多线程/多进程环境中注意数据一致性
-3. **处理异常情况**：考虑网络故障、Redis宕机等异常情况
-4. **性能优化**：合理设置过期时间、使用管道等优化性能
-5. **监控和日志**：建立完善的监控和日志系统
-
-这些实战案例为在生产环境中使用Redis提供了坚实的基础，帮助开发者构建高性能、高可用的应用系统。
-```
+class ChatSystem:
+    def __init__(self, redis_client):
+        self.redis_client = redis_client
+        self.pubsub = self.redis_client.pubsub()
+    
+    def subscribe(self, channel):
+        """订阅频道"""
+        self.pubsub.subscribe(channel)
+    
+    def publish(self, channel, message):

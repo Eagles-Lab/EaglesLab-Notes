@@ -521,7 +521,6 @@ EOF
 # 测试从节点只读
 redis-cli -p 6680 SET readonly_test "should_fail"
 
-
 # 监控复制延迟
 # 获取复制偏移量
 master_offset=$(redis-cli -p 6679 INFO replication | grep master_repl_offset | cut -d: -f2 | tr -d '\r')
