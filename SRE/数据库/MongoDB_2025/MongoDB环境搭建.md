@@ -15,10 +15,9 @@
 ```ini
 [mongodb-org-7.0]
 name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/
-gpgcheck=1
+baseurl=https://mirrors.tuna.tsinghua.edu.cn/mongodb/yum/el9-7.0/
+gpgcheck=0
 enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
 ```
 
 **步骤 2: 安装 MongoDB**
@@ -27,6 +26,7 @@ gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
 
 ```shell
 # 清理缓存并安装
+yum makecache
 yum install -y mongodb-org
 ```
 
@@ -151,11 +151,11 @@ replication:
 tee /etc/yum.repos.d/mongodb-org-7.0.repo << EOF
 [mongodb-org-7.0]
 name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/
-gpgcheck=1
+baseurl=https://mirrors.tuna.tsinghua.edu.cn/mongodb/yum/el9-7.0/
+gpgcheck=0
 enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
 EOF
+yum makecache
 yum install -y mongodb-org
 mkdir -p /data/mongodb
 sed -i 's|dbPath: /var/lib/mongo|dbPath: /data/mongodb|' /etc/mongod.conf

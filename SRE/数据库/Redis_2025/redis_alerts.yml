@@ -1,0 +1,62 @@
+# redis_alerts.yml - Redis告警配置
+
+alerts:
+  memory:
+    fragmentation_ratio:
+      threshold: 1.5
+      level: warning
+      message: "内存碎片率过高"
+    
+    used_memory_ratio:
+      threshold: 0.8
+      level: warning
+      message: "内存使用率过高"
+  
+  performance:
+    hit_rate:
+      threshold: 0.8
+      level: warning
+      message: "缓存命中率过低"
+    
+    slow_queries:
+      threshold: 10
+      level: warning
+      message: "慢查询过多"
+  
+  connections:
+    connected_clients_ratio:
+      threshold: 0.8
+      level: warning
+      message: "连接数过高"
+  
+  persistence:
+    rdb_changes:
+      threshold: 10000
+      level: warning
+      message: "RDB未保存变更过多"
+    
+    aof_rewrite:
+      threshold: 3600  # 1小时
+      level: warning
+      message: "AOF重写时间过长"
+
+notifications:
+  email:
+    enabled: true
+    smtp_server: "smtp.example.com"
+    smtp_port: 587
+    username: "alert@example.com"
+    password: "password"
+    recipients:
+      - "admin@example.com"
+      - "ops@example.com"
+  
+  webhook:
+    enabled: true
+    url: "https://hooks.slack.com/services/xxx"
+    
+  sms:
+    enabled: false
+    api_key: "your_sms_api_key"
+    recipients:
+      - "+86138xxxxxxxx"
