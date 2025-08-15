@@ -199,26 +199,26 @@ Redis 6.0+ 支持 SSL/TLS 加密传输。
 
 ```shell
 # 创建证书目录
-sudo mkdir -p /etc/redis/ssl
+mkdir -p /etc/redis/ssl
 cd /etc/redis/ssl
 
 # 生成私钥
-sudo openssl genrsa -out redis.key 2048
+openssl genrsa -out redis.key 2048
 
 # 生成证书签名请求
-sudo openssl req -new -key redis.key -out redis.csr -subj "/C=CN/ST=Beijing/L=Beijing/O=Company/CN=redis.example.com"
+openssl req -new -key redis.key -out redis.csr -subj "/C=CN/ST=Beijing/L=Beijing/O=Company/CN=redis.example.com"
 
 # 生成自签名证书
-sudo openssl x509 -req -days 365 -in redis.csr -signkey redis.key -out redis.crt
+openssl x509 -req -days 365 -in redis.csr -signkey redis.key -out redis.crt
 
 # 生成DH参数文件
-sudo openssl dhparam -out redis.dh 2048
+openssl dhparam -out redis.dh 2048
 
 # 设置权限
-sudo chown redis:redis /etc/redis/ssl/*
-sudo chmod 600 /etc/redis/ssl/redis.key
-sudo chmod 644 /etc/redis/ssl/redis.crt
-sudo chmod 644 /etc/redis/ssl/redis.dh
+chown redis:redis /etc/redis/ssl/*
+chmod 600 /etc/redis/ssl/redis.key
+chmod 644 /etc/redis/ssl/redis.crt
+chmod 644 /etc/redis/ssl/redis.dh
 ```
 
 **配置SSL/TLS**：
@@ -271,35 +271,16 @@ redis-cli --tls --insecure -p 6380
 
 ```shell
 # 允许特定IP访问Redis
-sudo iptables -A INPUT -p tcp -s 192.168.1.0/24 --dport 6379 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 6379 -j DROP
+iptables -A INPUT -p tcp -s 192.168.1.0/24 --dport 6379 -j ACCEPT
+iptables -A INPUT -p tcp --dport 6379 -j DROP
 
 # 限制连接频率
-sudo iptables -A INPUT -p tcp --dport 6379 -m connlimit --connlimit-above 10 -j DROP
-sudo iptables -A INPUT -p tcp --dport 6379 -m recent --set --name redis
-sudo iptables -A INPUT -p tcp --dport 6379 -m recent --update --seconds 60 --hitcount 20 --name redis -j DROP
+iptables -A INPUT -p tcp --dport 6379 -m connlimit --connlimit-above 10 -j DROP
+iptables -A INPUT -p tcp --dport 6379 -m recent --set --name redis
+iptables -A INPUT -p tcp --dport 6379 -m recent --update --seconds 60 --hitcount 20 --name redis -j DROP
 
 # 保存规则
-sudo iptables-save > /etc/iptables/rules.v4
-```
-
-**UFW 配置**：
-
-```shell
-# 启用UFW
-sudo ufw enable
-
-# 允许SSH
-sudo ufw allow ssh
-
-# 允许特定网络访问Redis
-sudo ufw allow from 192.168.1.0/24 to any port 6379
-
-# 拒绝其他Redis连接
-sudo ufw deny 6379
-
-# 查看规则
-sudo ufw status numbered
+iptables-save > /etc/iptables/rules.v4
 ```
 
 ### VPN 访问

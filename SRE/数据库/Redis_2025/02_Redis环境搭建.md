@@ -120,7 +120,7 @@ Redis 的主配置文件通常位于 `/etc/redis/redis.conf`，包含了所有�
 
 ### 常用配置参数
 
-#### 网络配置
+**网络配置**
 
 ```shell
 # 绑定地址
@@ -141,7 +141,7 @@ timeout 0
 tcp-keepalive 300
 ```
 
-#### 通用配置
+**通用配置**
 
 ```shell
 # 以守护进程方式运行
@@ -163,7 +163,7 @@ databases 16
 always-show-logo no
 ```
 
-#### 内存管理
+**内存管理**
 
 ```shell
 # 最大内存限制
@@ -186,7 +186,7 @@ maxmemory-samples 5
 
 ### 安全配置
 
-#### 密码认证
+**密码认证**
 
 ```shell
 # 设置密码
@@ -199,7 +199,7 @@ rename-command KEYS ""
 rename-command CONFIG "CONFIG_9a8b7c6d5e4f"
 ```
 
-#### ACL 用户管理
+**ACL 用户管理**
 
 ```shell
 # 启用 ACL 日志
@@ -214,7 +214,7 @@ acllog-max-len 128
 # user readonly_user on >readonly_password ~* +@read -@write -@dangerous
 ```
 
-#### 网络安全
+**网络安全**
 
 ```shell
 # 保护模式（默认开启）
@@ -231,7 +231,7 @@ rename-command SCRIPT ""
 
 ### 性能调优配置
 
-#### 持久化优化
+**持久化优化**
 
 ```shell
 # RDB 配置
@@ -266,7 +266,7 @@ auto-aof-rewrite-percentage 100
 auto-aof-rewrite-min-size 64mb
 ```
 
-#### 客户端连接优化
+**客户端连接优化**
 
 ```shell
 # 最大客户端连接数
@@ -282,7 +282,7 @@ client-output-buffer-limit pubsub 32mb 8mb 60
 client-query-buffer-limit 1gb
 ```
 
-#### 慢查询配置
+**慢查询配置**
 
 ```shell
 # 慢查询阈值（微秒）

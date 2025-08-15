@@ -447,10 +447,4 @@ echo deadline > /sys/block/sdb/queue/scheduler
 echo 1 > /sys/block/sdb/queue/iosched/fifo_batch
 ```
 
-## [扩展] 实践操作
-
-### 需求描述
-
-通过实际操作来监控 Redis 性能、优化内存使用，并测试性能提升效果。
-
-### 实践细节和结果验证
+## 实践操作
