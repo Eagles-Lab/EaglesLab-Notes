@@ -542,14 +542,12 @@ redis-cli --cluster add-node 127.0.0.1:7007 127.0.0.1:7001
 ```shell
 # NEW_MASTER_ID
 redis-cli -h 127.0.0.1 -p 7007 CLUSTER MYID
-# SLOTS_TO_MIGRATE
-16384 / 4 = 4096
-
+# SLOTS_TO_MIGRATE：16384 / 4 = 4096
 redis-cli --cluster reshard 127.0.0.1:7001 \
-    --cluster-from all \
-    --cluster-to  <NEW_MASTER_ID> \
-    --cluster-slots  <SLOTS_TO_MIGRATE> \
-    --cluster-yes
+   --cluster-from all \
+   --cluster-to  <NEW_MASTER_ID> \
+   --cluster-slots  <SLOTS_TO_MIGRATE> \
+   --cluster-yes
 ```
 8. 添加新从节点
 ```shell
@@ -567,10 +565,10 @@ redis-cli --cluster add-node 127.0.0.1:7008 127.0.0.1:7001 --cluster-slave --clu
 # TARGET_ID：选择一个节点作为目标节点
 # RANGE_COUNT：槽位迁移数量
 redis-cli --cluster reshard 127.0.0.1:7001 \
-    --cluster-from <REMOVE_MASTER_ID> \
-    --cluster-to <TARGET_ID> \
-    --cluster-slots <RANGE_COUNT> \
-    --cluster-yes > /dev/null 2>&1
+   --cluster-from <REMOVE_MASTER_ID> \
+   --cluster-to <TARGET_ID> \
+   --cluster-slots <RANGE_COUNT> \
+   --cluster-yes > /dev/null 2>&1
 ```
 3. 删除从节点 & 主节点
 ```shell
@@ -584,12 +582,12 @@ redis-cli --cluster del-node 127.0.0.1:7001 <REMOVE_MASTER_ID>
 **节点故障恢复流程**
 1. 检测故障节点：ping 不通
 2. 分析故障类型：通过 `cluster info` 查看集群状态 `cluster_state` 字段 && `cluster nodes` 查看节点状态
-    - `cluster_state: ok`：可能是从节点故障
-    - `cluster_state: fail`：可能是主节点故障
-    - `cluster_state: unknown`：未知故障
+   - `cluster_state: ok`：可能是从节点故障
+   - `cluster_state: fail`：可能是主节点故障
+   - `cluster_state: unknown`：未知故障
 3. 执行故障恢复：
-    - 尝试重启相关 Redis 进程：如果需要可以重置节点集群状态  `CLUSTER RESET SOFT` 后重新加入集群 `CLUSTER MEET $failed_ip $failed_port`
-    - 手动故障转移：如果节点故障持续存在，可能需要手动触发故障转移，从节点上执行 `CLUSTER FAILOVER FORCE`
+   - 尝试重启相关 Redis 进程：如果需要可以重置节点集群状态  `CLUSTER RESET SOFT` 后重新加入集群 `CLUSTER MEET $failed_ip $failed_port`
+   - 手动故障转移：如果节点故障持续存在，可能需要手动触发故障转移，从节点上执行 `CLUSTER FAILOVER FORCE`
 4. 检查恢复结果：通过 `cluster nodes` 查看节点状态，确认故障节点已恢复
 
 **数据一致性检查**
