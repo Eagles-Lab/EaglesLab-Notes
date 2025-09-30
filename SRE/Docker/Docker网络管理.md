@@ -7,20 +7,21 @@
 `Usage:  docker network create [OPTIONS] NETWORK`
 ```shell
 # 使用bridge网络驱动创建网络并启动容器
-docker network create -d bridge my-net
-docker run --network=my-net -itd --name=container1 busybox
-docker run --network=my-net -itd --name=container2 busybox
+[root@docker-server ~]# docker network create -d bridge my-net
+[root@docker-server ~]# docker run --network=my-net -itd --name=container1 busybox
+[root@docker-server ~]# docker run --network=my-net -itd --name=container2 busybox
 # 测试网络连接
-[root@master01 ~]# docker exec -it container1 ping www.baidu.com
-[root@master01 ~]# docker exec -it container1 cat /etc/hosts | grep 172
+[root@docker-server ~]# docker exec -it container1 ping www.baidu.com
+[root@docker-server ~]# docker exec -it container1 cat /etc/hosts | grep 172
 172.19.0.3	1adf81f08c86
-[root@master01 ~]# docker exec -it container1 ping container2
+[root@docker-server ~]# docker exec -it container1 ping container2
 ```
 # 网络驱动
+
 Docker服务安装完成之后，默认在每个宿主机会生成一个名称为docker0的网卡，其ip地址都是172.17.0.1/16，并且会生成三种不同类型的网络。
 
 ```shell
-[root@master01 ~]# docker network ls
+[root@docker-server ~]# docker network ls
 NETWORK ID     NAME                     DRIVER    SCOPE
 fe2c2cabeff7   bridge                   bridge    local
 459b4a9926ed   host                     host      local
@@ -35,29 +36,34 @@ fe2c2cabeff7   bridge                   bridge    local
 | bridge模式 | --net=bridge | 默认网络模式。Docker daemon创建docker0虚拟网桥，通过veth pair连接容器，实现容器间的通信。支持端口映射和地址转换，提供基本的网络隔离。 | 最常用的网络模式
 
 # 工作原理
+
 ## none网络类型
+
 ![img](docker网络管理/None网络类型.png)
 
 ## container网络类型
+
 ![img](docker网络管理/Container网络类型.png)
 
 
 ## host网络类型
+
 ![img](docker网络管理/Host网络类型.png)
 
 
 ## bridge网络类型
+
 ![img](docker网络管理/Bridge网络类型.png)
 
 **veth pair 对应关系**
 ```shell
-[root@master01 ~]# ip link show | grep veth0f | awk '{print $1,$2}'
+[root@docker-server ~]# ip link show | grep veth0f | awk '{print $1,$2}'
 40: veth0fbbd68@if39
-[root@master01 ~]# cat /sys/class/net/veth0fbbd68/ifindex
+[root@docker-server ~]# cat /sys/class/net/veth0fbbd68/ifindex
 40
-[root@master01 ~]# cat /sys/class/net/veth0fbbd68/iflink
+[root@docker-server ~]# cat /sys/class/net/veth0fbbd68/iflink
 39
-[root@master01 ~]# docker exec -it container1 ip link show eth0
+[root@docker-server ~]# docker exec -it container1 ip link show eth0
 39: eth0@if40: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue
     link/ether 02:42:ac:13:00:03 brd ff:ff:ff:ff:ff:ff
 ```
