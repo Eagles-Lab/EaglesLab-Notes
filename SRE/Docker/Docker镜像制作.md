@@ -1,7 +1,9 @@
 # 背景介绍
+
 Docker 镜像制作类似于虚拟机的模板制作，即按照公司的实际业务将需要安装的软件、相关配置等基础环境配置完成，然后将虚拟机再提交为模板，最后再批量从模板批量创建新的虚拟机，这样可以极大地简化业务中相同环境的虚拟机运行环境的部署工作，Docker的镜像制作分为手动制作可自动制作（基于 DockerFile ），企业通常都是基于 DockerFile 制作镜像。
 
 # 手动制作nginx镜像
+
 ```shell
 [root@docker-server ~]# docker run -it ubuntu bash
 root@1d8e32ab39d6:/# apt-get update & apt-get install nginx curl vim-tiny -y
@@ -24,9 +26,11 @@ commit是合并了save、load、export、import这几个特性的一个综合性
 3. 如果原本的镜像有3层，commit之后就会有4层，最新的一层为从镜像运行到commit之间对文件系统的修改。
 
 # DockerFile制作镜像
+
 DockerFile可以说是一种可以被Docker程序解释的脚本，DockerFile是由一条条的命令组成的，每条命令对应linux下面的一条命令，Docker程序将这些DockerFile指令再翻译成真正的linux命令，其有自己的书写方式和支持的命令，Docker程序读取DockerFile并根据指令生成Docker镜像，相比手动制作镜像的方式，DockerFile更能直观地展示镜像是怎么产生的，有了写好的各种各样的DockerFIle文件，当后期某个镜像有额外的需求时，只要在之前的DockerFile添加或者修改相应的操作即可重新生成新的Docker镜像，避免了重复手动制作镜像的麻烦。
 
 ## 最佳实践
+
 ```shell
 # Dockerfile
 ## 使用官方 Ubuntu 22.04 LTS 作为基础镜像
@@ -74,6 +78,7 @@ CMD ["nginx", "-g", "daemon off;"]
 [root@docker-server ~]# docker build -t nginx:v1 .
 ```
 ## 优化说明
+
 - 层合并: 将多个`RUN`指令合并以减少镜像层数
 - 缓存清理: 清理APT缓存减小镜像体积
 - 安全实践: 非root用户运行；只读挂载配置文件
@@ -82,6 +87,7 @@ CMD ["nginx", "-g", "daemon off;"]
   
 
 ## 指令说明
+
 操作指令
 
 | 指令   | 说明                         |

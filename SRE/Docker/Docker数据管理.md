@@ -24,13 +24,13 @@
 
 ```shell
 # 创建一个简单的数据卷
-docker volume create my_data
+[root@docker-server ~]# docker volume create my_data
 
 # 创建带标签的数据卷
-docker volume create --label env=prod --label app=web my_app_data
+[root@docker-server ~]# docker volume create --label env=prod --label app=web my_app_data
 
 # 创建指定驱动的数据卷
-docker volume create --driver local --opt type=nfs --opt o=addr=192.168.1.1,rw --opt device=:/path/to/dir nfs_data
+[root@docker-server ~]# docker volume create --driver local --opt type=nfs --opt o=addr=192.168.1.1,rw --opt device=:/path/to/dir nfs_data
 
 # 创建带容量限制的数据卷(需要支持的存储驱动)
 # docker volume create --opt size=10G mysql_data
@@ -40,19 +40,19 @@ docker volume create --driver local --opt type=nfs --opt o=addr=192.168.1.1,rw -
 
 ```shell
 # 列出所有数据卷
-docker volume ls
+[root@docker-server ~]# docker volume ls
 
 # 按名称过滤数据卷
-docker volume ls --filter name=my_data
+[root@docker-server ~]# docker volume ls --filter name=my_data
 
 # 按标签过滤数据卷
-docker volume ls --filter label=env=prod
+[root@docker-server ~]# docker volume ls --filter label=env=prod
 
 # 以自定义格式输出(仅显示名称)
-docker volume ls --format "{{.Name}}"
+[root@docker-server ~]# docker volume ls --format "{{.Name}}"
 
 # 列出未被任何容器使用的数据卷
-docker volume ls --filter dangling=true
+[root@docker-server ~]# docker volume ls --filter dangling=true
 
 ```
 
@@ -60,42 +60,42 @@ docker volume ls --filter dangling=true
 
 ```shell
 # 查看单个数据卷详情
-docker volume inspect my_data
+[root@docker-server ~]# docker volume inspect my_data
 
 # 查看多个数据卷详情
-docker volume inspect my_data my_app_data
+[root@docker-server ~]# docker volume inspect my_data my_app_data
 
 # 以特定格式查看数据卷挂载点
-docker volume inspect --format '{{ .Mountpoint }}' my_data
+[root@docker-server ~]# docker volume inspect --format '{{ .Mountpoint }}' my_data
 
 # 以特定格式查看数据卷驱动
-docker volume inspect --format '{{ .Driver }}' my_data
+[root@docker-server ~]# docker volume inspect --format '{{ .Driver }}' my_data
 ```
 
 `Usage:  docker volume rm [OPTIONS] VOLUME [VOLUME...]`
 
 ```shell
 # 删除单个数据卷
-docker volume rm my_data
+[root@docker-server ~]# docker volume rm my_data
 
 # 删除多个数据卷
-docker volume rm nfs_data my_app_data
+[root@docker-server ~]# docker volume rm nfs_data my_app_data
 
 # 强制删除数据卷(即使正在使用)
-# docker volume rm -f my_data
+# [root@docker-server ~]# docker volume rm -f my_data
 ```
 
 `Usage:  docker volume prune [OPTIONS]`
 
 ```shell
 # 删除所有未使用的数据卷
-docker volume prune
+[root@docker-server ~]# docker volume prune
 
 # 删除未使用的数据卷并跳过确认提示
-docker volume prune --force
+[root@docker-server ~]# docker volume prune --force
 
 # 按标签过滤并删除未使用的数据卷
-docker volume prune --filter label=env=dev
+[root@docker-server ~]# docker volume prune --filter label=env=dev
 ```
 
 ## 使用卷启动容器
@@ -119,8 +119,8 @@ docker run -v [<volume-name>:]<mount-path>[:opts]
 | volume-nocopy | 创建卷时不从容器复制数据 | `volume-nocopy=true` | 用于避免不必要的数据复制，提高性能 |
 
 ```shell
-docker run -d --name devtest01 --mount source=myvol01,target=/app busybox:latest
-docker run -d --name devtest02 -v myvol02:/app busybox:latest
+[root@docker-server ~]# docker run -d --name devtest01 --mount source=myvol01,target=/app busybox:latest
+[root@docker-server ~]# docker run -d --name devtest02 -v myvol02:/app busybox:latest
 ```
 
 
@@ -130,83 +130,81 @@ docker run -d --name devtest02 -v myvol02:/app busybox:latest
 
 ```shell
 # 步骤1: 创建MySQL数据卷
-docker volume create mysql_data
+[root@docker-server ~]# docker volume create mysql_data
 
 # 步骤2: 启动MySQL容器并挂载数据卷
-docker run -d \
-  --name mysql_db \
-  -e MYSQL_ROOT_PASSWORD=mysecret \
-  -e MYSQL_DATABASE=testdb \
-  -e MYSQL_USER=testuser \
-  -e MYSQL_PASSWORD=testpass \
-  -p 3306:3306 \
-  --mount type=volume,src=mysql_data,dst=/var/lib/mysql \
-  mysql:8.0
+[root@docker-server ~]# docker run -d \
+    --name mysql_db \
+    -e MYSQL_ROOT_PASSWORD=mysecret \
+    -e MYSQL_DATABASE=testdb \
+    -e MYSQL_USER=testuser \
+    -e MYSQL_PASSWORD=testpass \
+    -p 3306:3306 \
+    --mount type=volume,src=mysql_data,dst=/var/lib/mysql \
+    mysql:8.0
 
 # 步骤3: 验证MySQL容器运行状态
-docker ps -a | grep mysql_db
+[root@docker-server ~]# docker ps -a | grep mysql_db
 
 # 步骤4: 连接到MySQL并创建测试数据
-docker exec -it mysql_db mysql -uroot -pmysecret -e "
-  USE testdb;
-  CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100), email VARCHAR(100));
-  INSERT INTO users (name, email) VALUES ('张三', 'zhangsan@example.com'), ('李四', 'lisi@example.com');
-  SELECT * FROM users;
+[root@docker-server ~]# docker exec -it mysql_db mysql -uroot -pmysecret -e "
+    USE testdb;
+    CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(100), email VARCHAR(100));
+    INSERT INTO users (name, email) VALUES ('张三', 'zhangsan@example.com'), ('李四', 'lisi@example.com');
+    SELECT * FROM users;
 "
 
 # 步骤5: 使用docker命令备份数据库
 # 创建备份目录
-mkdir -p ~/mysql_backups
+[root@docker-server ~]# mkdir -p ~/mysql_backups
 
 # 使用mysqldump进行备份
-docker exec mysql_db mysqldump -uroot -pmysecret testdb > ~/mysql_backups/testdb_backup.sql
+[root@docker-server ~]# docker exec mysql_db mysqldump -uroot -pmysecret testdb > ~/mysql_backups/testdb_backup.sql
 
 # 步骤6: 模拟数据丢失
-docker exec -it mysql_db mysql -uroot -pmysecret -e "
-  USE testdb;
-  DROP TABLE users;
-  SHOW TABLES;
+[root@docker-server ~]# docker exec -it mysql_db mysql -uroot -pmysecret -e "
+    USE testdb;
+    DROP TABLE users;
+    SHOW TABLES;
 "
 
 # 步骤7: 从备份恢复数据
-docker exec -i mysql_db mysql -uroot -pmysecret testdb < ~/mysql_backups/testdb_backup.sql
+[root@docker-server ~]# docker exec -i mysql_db mysql -uroot -pmysecret testdb < ~/mysql_backups/testdb_backup.sql
 
 # 步骤8: 验证数据恢复
-docker exec -it mysql_db mysql -uroot -pmysecret -e "
-  USE testdb;
-  SELECT * FROM users;
+[root@docker-server ~]# docker exec -it mysql_db mysql -uroot -pmysecret -e "
+    USE testdb;
+    SELECT * FROM users;
 "
 
 # 步骤9: 测试容器删除后数据持久性
-# 停止并删除MySQL容器
-docker stop mysql_db
-docker rm mysql_db
+[root@docker-server ~]# docker stop mysql_db
+[root@docker-server ~]# docker rm mysql_db
 
 # 使用相同的数据卷重新创建容器
-docker run -d \
-  --name mysql_db_new \
-  -e MYSQL_ROOT_PASSWORD=mysecret \
-  -e MYSQL_DATABASE=testdb \
-  -e MYSQL_USER=testuser \
-  -e MYSQL_PASSWORD=testpass \
-  -p 3306:3306 \
-  --mount type=volume,src=mysql_data,dst=/var/lib/mysql \
-  mysql:8.0
+[root@docker-server ~]# docker run -d \
+    --name mysql_db_new \
+    -e MYSQL_ROOT_PASSWORD=mysecret \
+    -e MYSQL_DATABASE=testdb \
+    -e MYSQL_USER=testuser \
+    -e MYSQL_PASSWORD=testpass \
+    -p 3306:3306 \
+    --mount type=volume,src=mysql_data,dst=/var/lib/mysql \
+    mysql:8.0
 
 # 等待MySQL启动完成
-sleep 20
+[root@docker-server ~]# sleep 20
 
 # 验证数据是否仍然存在
-docker exec -it mysql_db_new mysql -uroot -pmysecret -e "
-  USE testdb;
-  SELECT * FROM users;
+[root@docker-server ~]# docker exec -it mysql_db_new mysql -uroot -pmysecret -e "
+    USE testdb;
+    SELECT * FROM users;
 "
-
 # 步骤10: 清理资源（可选）
-# docker stop mysql_db_new
-# docker rm mysql_db_new
-# docker volume rm mysql_data
-# rm -rf ~/mysql_backups
+[root@docker-server ~]# docker stop mysql_db_new
+[root@docker-server ~]# docker rm mysql_db_new
+[root@docker-server ~]# docker volume rm mysql_data
+[root@docker-server ~]# rm -rf ~/mysql_backups
 ```
 
 # Bind mounts
@@ -238,10 +236,10 @@ docker run -v <host-path>:<container-path>[:opts]
 
 ```shell
 # 步骤1: 创建本地工作目录
-mkdir -p ~/nginx_demo/{conf,html,logs}
+[root@docker-server ~]# mkdir -p ~/nginx_demo/{conf,html,logs}
 
 # 步骤2: 创建自定义Nginx配置文件
-cat > ~/nginx_demo/conf/nginx.conf << 'EOF'
+[root@docker-server ~]# cat > ~/nginx_demo/conf/nginx.conf << 'EOF'
 user  nginx;
 worker_processes  auto;
 
@@ -283,43 +281,44 @@ http {
 EOF
 
 # 步骤3: 创建自定义HTML页面
-cat > ~/nginx_demo/html/index.html << 'EOF'
+[root@docker-server ~]# cat > ~/nginx_demo/html/index.html << 'EOF'
 Bind Mount 测试页面
 EOF
 
 # 步骤4: 启动Nginx容器并使用bind mount挂载配置和HTML目录(只读模式)
-docker run -d --name nginx_bind_mount \
-  -p 8080:80 \
-  --mount type=bind,src=/root/nginx_demo/conf/nginx.conf,dst=/etc/nginx/nginx.conf,readonly \
-  --mount type=bind,src=/root/nginx_demo/html,dst=/usr/share/nginx/html,readonly \
-  --mount type=bind,src=/root/nginx_demo/logs,dst=/var/log/nginx \
-  nginx:latest
+[root@docker-server ~]# docker run -d --name nginx_bind_mount \
+    -p 8080:80 \
+    --mount type=bind,src=/root/nginx_demo/conf/nginx.conf,dst=/etc/nginx/nginx.conf,readonly \
+    --mount type=bind,src=/root/nginx_demo/html,dst=/usr/share/nginx/html,readonly \
+    --mount type=bind,src=/root/nginx_demo/logs,dst=/var/log/nginx \
+    nginx:latest
 
 # 步骤5: 验证Nginx容器是否正常运行
-docker ps | grep nginx_bind_mount
+[root@docker-server ~]# docker ps | grep nginx_bind_mount
 
 # 步骤6: 测试网站访问
-curl http://localhost:8080
+[root@docker-server ~]# curl http://localhost:8080
 
 # 步骤7: 验证只读挂载(这将失败，因为挂载是只读的)
-docker exec -it nginx_bind_mount bash -c "echo 'test' > /usr/share/nginx/html/test.txt"
+[root@docker-server ~]# docker exec -it nginx_bind_mount bash -c "echo 'test' > /usr/share/nginx/html/test.txt"
+bash: /usr/share/nginx/html/test.txt: Read-only file system
 
 # 步骤8: 在宿主机上修改HTML文件
-cat > ~/nginx_demo/html/index.html << 'EOF'
+[root@docker-server ~]# cat > ~/nginx_demo/html/index.html << 'EOF'
 已更新的页面
 EOF
 
 # 步骤9: 再次测试网站访问，查看更新后的页面
-curl http://localhost:8080
+[root@docker-server ~]# curl http://localhost:8080
 
 # 步骤10: 查看Nginx日志(它们被挂载到宿主机)
-ls -la ~/nginx_demo/logs/
-cat ~/nginx_demo/logs/access.log
+[root@docker-server ~]# ls -la ~/nginx_demo/logs/
+[root@docker-server ~]# cat ~/nginx_demo/logs/access.log
 
 # 步骤11: 清理资源(可选)
-# docker stop nginx_bind_mount
-# docker rm nginx_bind_mount
-# rm -rf ~/nginx_demo
+[root@docker-server ~]# docker stop nginx_bind_mount
+[root@docker-server ~]# docker rm nginx_bind_mount
+[root@docker-server ~]# rm -rf ~/nginx_demo
 ```
 
 # 扩展阅读

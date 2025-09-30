@@ -1,4 +1,5 @@
 # Linux namespace技术
+
 如果一个宿主机运行了N个容器，多个容器带来的以下问题怎么解决：
 1. 怎么样保证每个容器都有不同的文件系统并且能互不影响？
 2. 一个docker主进程内的各个容器都是其子进程，那么如何实现同一个主进程下不同类型的子进程？各个子进程间通信能相互访问吗？
@@ -20,37 +21,42 @@ namespace 是 Linux 系统的底层概念，在内核层实现，即有一些不
 | User Namespace（user） | 提供用户和用户组的隔离能力，增强容器安全性 | CLONE_NEWUSER | 3.8 | 容器权限控制、用户映射、安全策略管理 |
 
 # MNT Namespace
+
 提供磁盘挂载点和文件系统的隔离能力，使容器拥有独立的文件系统层次结构。
-```bash
+```shell
 # 在容器内挂载 tmpfs 文件系统
-docker run -it --rm ubuntu bash
-mkdir /mnt/tmpfs
-mount -t tmpfs -o size=100M tmpfs /mnt/tmpfs
+[root@docker-server ~]# docker run -it --rm ubuntu bash
+[root@docker-server ~]# mkdir /mnt/tmpfs
+[root@docker-server ~]# mount -t tmpfs -o size=100M tmpfs /mnt/tmpfs
 # 宿主机上无法看到此挂载点
-df -h
+[root@docker-server ~]# df -h
 ```
 
 # IPC Namespace
+
 提供进程间通信的隔离能力，确保容器内进程通信安全。
+
 ```shell
 # 容器A创建共享内存段
-docker run -it --name shm1 --rm ubuntu bash
-ipcmk -M 64M  # 返回共享内存 ID（如 0）
+[root@docker-server ~]# docker run -it --name shm1 --rm ubuntu bash
+[root@docker-server ~]# ipcmk -M 64M  # 返回共享内存 ID（如 0）
 
 # 容器B无法访问
-docker run -it --name shm2 --rm ubuntu bash
-ipcs -m  
+[root@docker-server ~]# docker run -it --name shm2 --rm ubuntu bash
+[root@docker-server ~]# ipcs -m  
 ```
 
 # UTS Namespace
+
 提供主机名和域名的隔离能力，使容器拥有独立的主机标识。
 ```shell
 # 启动容器并设置主机名
-docker run -it --hostname=myapp --rm ubuntu bash
-hostname
+[root@docker-server ~]# docker run -it --hostname=myapp --rm ubuntu bash
+[root@myapp ~]# hostname
 ```
 
 # PID Namespace
+
 提供进程隔离能力，实现容器内进程树独立管理。
 ```shell
 # 查看当前宿主机所有进程
@@ -72,10 +78,18 @@ hostname
    - 宿主机上的进程可以访问和管理容器内的进程。
 
 # Net Namespace
+
 提供网络栈的隔离能力，包括网络设备、IP地址、路由表等。参考`08.Docker网络管理`
 
 # User Namespace
+
 提供用户和用户组的隔离能力，增强容器安全性。
 ```shell
 # A容器创建用户在B容器里不可见
-```
+[root@docker-server ~]# docker run -it --name user1 --rm ubuntu bash
+[root@docker-server ~]# useradd -m testuser
+[root@docker-server ~]# id testuser
+# 切换到B容器
+[root@docker-server ~]# docker run -it --name user2 --rm ubuntu bash
+[root@docker-server ~]# id testuser  # 显示未找到用户
+```   

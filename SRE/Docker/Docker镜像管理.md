@@ -1,4 +1,5 @@
 # 镜像
+
 容器是一个独立的进程，它从哪里获取文件和配置？如何共享这些环境？
 
 镜像是一个标准化包，其中包含运行容器所需的所有文件、二进制文件、库和配置。
@@ -11,9 +12,11 @@
 
 
 # 镜像管理
+
 ## 搜索镜像
+
 `Usage:  docker search [OPTIONS] TERM`
-```bash
+```shell
 # 搜索包含关键字的镜像
 [root@docker-server ~]# docker search centos
 ```
@@ -23,8 +26,9 @@
 
 
 ## 下载镜像
+
 `Usage:  docker pull [OPTIONS] NAME[:TAG|@DIGEST]`
-```bash
+```shell
 # 下载nginx、centos、hello-world镜像
 [root@docker-server ~]# docker pull nginx
 [root@docker-server ~]# docker pull centos
@@ -34,8 +38,9 @@
 
 
 ## 镜像列表
+
 `Usage:  docker image COMMAND`
-```bash
+```shell
 # 列出本地所有镜像
 [root@docker-server ~]# docker image ls
 REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
@@ -52,8 +57,9 @@ nginx         latest    d1a364dc548d   2 weeks ago    133MB
 
 
 ## 镜像标签
+
 `Usage:  docker image tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG]`
-```bash
+```shell
 [root@docker-server ~]# docker tag centos:latest mycentos:latest
 [root@docker-server ~]# docker images
 REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
@@ -63,8 +69,9 @@ nginx         latest    d1a364dc548d   2 weeks ago    133MB
 
 
 ## 镜像信息
+
 `Usage:  docker image inspect [OPTIONS] IMAGE [IMAGE...]`
-```bash
+```shell
 [root@docker-server ~]# docker inspect centos:latest 
 [
     {
@@ -79,8 +86,9 @@ nginx         latest    d1a364dc548d   2 weeks ago    133MB
 ```
 
 ## 镜像创建信息
+
 `Usage:  docker image history [OPTIONS] IMAGE`
-```bash
+```shell
 [root@docker-server ~]# docker history centos:latest 
 IMAGE          CREATED        CREATED BY                                      SIZE      COMMENT
 300e315adb2f   6 months ago   /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B        
@@ -88,8 +96,9 @@ IMAGE          CREATED        CREATED BY                                      SI
 ```
 
 ## 镜像导出
+
 `Usage:  docker image save [OPTIONS] IMAGE [IMAGE...]`
-```bash
+```shell
 [root@docker-server ~]# docker image save centos:latest -o /opt/centos.tar.gz
 [root@docker-server ~]# ll /opt/centos.tar.gz 
 -rw------- 1 root root 216535040 6月   9 10:33 /opt/centos.tar.gz
@@ -99,8 +108,9 @@ IMAGE          CREATED        CREATED BY                                      SI
 ```
 
 ## 镜像导入
+
 `Usage:  docker image load [OPTIONS]`
-```bash
+```shell
 [root@docker-server ~]# docker image load -i /opt/centos.tar.gz 
 Loaded image: centos:latest
 [root@docker-server ~]# docker image load < /opt/centos.tar.gz 
@@ -108,8 +118,9 @@ Loaded image: centos:latest
 ```
 
 ## 删除镜像
+
 `Usage:  docker image rm [OPTIONS] IMAGE [IMAGE...]`
-```bash
+```shell
 [root@docker-server ~]# docker image rm nginx:latest 
 Untagged: nginx:latest
 Untagged: nginx@sha256:6d75c99af15565a301e48297fa2d121e15d80ad526f8369c526324f0f7ccb750

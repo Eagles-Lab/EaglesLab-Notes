@@ -65,7 +65,7 @@ CONFIG_MEMCG_KMEM=y
 
 ```bash
 # 查看我们宿主机的cup数量
-[root@localhost ~]# top
+[root@docker-server ~]# top
 top - 21:32:49 up 43 min,  2 users,  load average: 3.54, 1.82, 0.80
 Tasks: 186 total,   1 running, 185 sleeping,   0 stopped,   0 zombie
 %Cpu0  :  0.0 us,  0.0 sy,  0.0 ni, 99.5 id,  0.0 wa,  0.5 hi,  0.0 si,  0.0 st
@@ -73,12 +73,12 @@ Tasks: 186 total,   1 running, 185 sleeping,   0 stopped,   0 zombie
 %Cpu2  :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
 %Cpu3  :  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
 
-[root@localhost ~]# docker run -it --rm --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
+[root@docker-server ~]# docker run -it --rm --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
 stress-ng: info: [1] defaulting to a 86400 second run per stressor
 stress-ng: info: [1] dispatching hogs: 4 cpu, 1 vm
 
 # 新建窗口查看
-[root@localhost ~]# docker stats
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O       BLOCK I/O   PIDS
 c6a795e4c09f   test1     396.78%   282.6MiB / 1.703GiB   16.21%    876B / 126B   0B / 0B     7
 
@@ -88,15 +88,15 @@ c6a795e4c09f   test1     396.78%   282.6MiB / 1.703GiB   16.21%    876B / 126B  
 ### 案例2: CPU限制
 
 ```bash
-[root@localhost ~]# docker run -it --rm --cpus 2 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
+[root@docker-server ~]# docker run -it --rm --cpus 2 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
 stress-ng: info: [1] defaulting to a 86400 second run per stressor
 stress-ng: info: [1] dispatching hogs: 4 cpu, 1 vm
 
-[root@localhost ~]# docker stats
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O       BLOCK I/O   PIDS
 5b7dcb36d738   test1     200.65%   279.7MiB / 1.703GiB   16.04%    876B / 126B   0B / 0B     7
 
-[root@localhost ~]# top
+[root@docker-server ~]# top
 top - 21:36:15 up 47 min,  3 users,  load average: 1.38, 1.92, 1.05
 Tasks: 198 total,   8 running, 190 sleeping,   0 stopped,   0 zombie
 %Cpu0  : 50.7 us,  1.4 sy,  0.0 ni, 47.2 id,  0.0 wa,  0.7 hi,  0.0 si,  0.0 st
@@ -110,13 +110,13 @@ Tasks: 198 total,   8 running, 190 sleeping,   0 stopped,   0 zombie
 ### 案例3: CPU绑定
 
 ```bash
-[root@localhost ~]# docker run -it --rm  --cpus 2 --cpuset-cpus 0,2 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
+[root@docker-server ~]# docker run -it --rm  --cpus 2 --cpuset-cpus 0,2 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
 
-[root@localhost ~]# docker stats
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O     BLOCK I/O         PIDS
 ee11d834dde5   test1     186.68%   1.488GiB / 1.781GiB   83.60%    648B / 0B   44.8GB / 95.7MB   25
 
-[root@localhost ~]# top
+[root@docker-server ~]# top
 top - 21:38:25 up 49 min,  3 users,  load average: 0.92, 1.40, 0.96
 Tasks: 197 total,   6 running, 191 sleeping,   0 stopped,   0 zombie
 %Cpu0  : 97.3 us,  2.0 sy,  0.0 ni,  0.0 id,  0.0 wa,  0.7 hi,  0.0 si,  0.0 st
@@ -130,10 +130,10 @@ MiB Swap:   2048.0 total,   2047.2 free,      0.8 used.    819.2 avail Mem
 - 基于cpu-shares对cpu进行切分
 
 ```bash
-[root@localhost ~]# docker run -it --rm  -d --cpu-shares 1000 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
-[root@localhost ~]# docker run -it --rm  -d --cpu-shares 500 --name test2 tylersmith22/docker-stress-ng --vm 1 --cpu 4
+[root@docker-server ~]# docker run -it --rm  -d --cpu-shares 1000 --name test1 tylersmith22/docker-stress-ng --vm 1 --cpu 4
+[root@docker-server ~]# docker run -it --rm  -d --cpu-shares 500 --name test2 tylersmith22/docker-stress-ng --vm 1 --cpu 4
 
-[root@localhost ~]# docker stats
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O     BLOCK I/O       PIDS
 d6dd34edb722   test1     543.41%   819.6MiB / 1.781GiB   44.95%    648B / 0B   102MB / 154MB   13
 154b07a94e2f   test2     241.15%   711.1MiB / 1.781GiB   39.00%    648B / 0B   406MB / 145MB
@@ -184,18 +184,18 @@ Linux会为每个进程计算一个分数，最终会将分数最高的进程kil
 ### 案例1: MEM无限制
 - 拉取容器压测工具镜像
 ```bash
-[root@docker-server1 ~]# docker pull lorel/docker-stress-ng
-[root@docker-server1 ~]# docker run -it --rm lorel/docker-stress-ng -help
+[root@docker-server ~]# docker pull lorel/docker-stress-ng
+[root@docker-server ~]# docker run -it --rm lorel/docker-stress-ng -help
 ```
 
 - 使用压测工具开启两个工作进程，每个工作进程最大允许使用内存256M，且宿主机不限制当前容器的最大内存
 
 ```bash
-[root@docker-server1 ~]# docker run -it --rm --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
+[root@docker-server ~]# docker run -it --rm --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
 stress-ng: info: [1] defaulting to a 86400 second run per stressor
 stress-ng: info: [1] dispatching hogs: 2 vm
 
-[root@docker-server1 ~]# docker stats
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O     BLOCK I/O   PIDS
 3ca32774fc20   test1     185.16%   514.3MiB / 1.781GiB   28.21%    648B / 0B   0B / 0B     5
 
@@ -222,8 +222,8 @@ bfff488e6185   test1     169.76%   255.8MiB / 256MiB   99.91%    648B / 0B   3.5
 软限制不会真正限制到内存的使用
 
 ```bash
-[root@docker-server1 ~]# docker run -it --rm -m 256m --memory-reservation 128m --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
-[root@docker-server1 ~]# docker stats
+[root@docker-server ~]# docker run -it --rm -m 256m --memory-reservation 128m --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
+[root@docker-server ~]# docker stats
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT   MEM %     NET I/O     BLOCK I/O         PIDS
 0ffb4b8fdbde   test1     174.52%   255.9MiB / 256MiB   99.95%    648B / 0B   5.33GB / 18.1GB   5
 ```
@@ -231,5 +231,5 @@ CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT   MEM %     NET I/O     BLO
 **交换分区限制**
 
 ```bash
-[root@docker-server1 ~]# docker run -it --rm -m 256m --memory-swap 512m --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
+[root@docker-server ~]# docker run -it --rm -m 256m --memory-swap 512m --name test1 lorel/docker-stress-ng --vm 2 --vm-bytes 256m
 ```

@@ -38,7 +38,7 @@ Docker Register作为Docker的核心组件之一负责镜像内容的存储与�
 **部署**
 ```shell
 # 执行安装脚本
-[root@master01 scripts]# ./install/install_registry.sh
+[root@docker-server scripts]# ./install/install_registry.sh
 ```
 
 ## 企业级方案Harbor
@@ -50,19 +50,19 @@ Harbor是一个用于存储和分发Docker镜像的企业级Registry服务器，
 **部署**
 ```bash
 # 1.准备安装包
-[root@docker-server1 ~]# wget https://github.com/goharbor/harbor/releases/download/v2.3.1/harbor-offline-installer-v2.3.1.tgz
-[root@docker-server1 ~]# tar xzvf harbor-offline-installer-v2.3.1.tgz 
-[root@docker-server1 ~]# ln -sv /root/harbor /usr/local/
+[root@docker-server ~]# wget https://github.com/goharbor/harbor/releases/download/v2.3.1/harbor-offline-installer-v2.3.1.tgz
+[root@docker-server ~]# tar xzvf harbor-offline-installer-v2.3.1.tgz 
+[root@docker-server ~]# ln -sv /root/harbor /usr/local/
 "/usr/local/harbor" -> "/root/harbor"
 # 2.配置文件
-[root@docker-server1 harbor]# cp harbor.yml.tmpl harbor.yml
-[root@docker-server1 harbor]# grep -Ev '#|^$' harbor.yml.tmpl > harbor.yml
-[root@docker-server1 harbor]# cat harbor.yml
+[root@docker-server harbor]# cp harbor.yml.tmpl harbor.yml
+[root@docker-server harbor]# grep -Ev '#|^$' harbor.yml.tmpl > harbor.yml
+[root@docker-server harbor]# cat harbor.yml
 # 3.执行安装
-[root@docker-server1 harbor]# ./prepare 
-[root@docker-server1 harbor]# ./install.sh 
+[root@docker-server harbor]# ./prepare 
+[root@docker-server harbor]# ./install.sh 
 # 之后的启动关闭可以通过docker-compose管理，自动生成docker-compose.yml文件
-[root@docker-server1 harbor]# ls
+[root@docker-server harbor]# ls
 common     docker-compose.yml    harbor.yml       install.sh  prepare
 common.sh  harbor.v2.3.1.tar.gz  harbor.yml.tmpl  LICENSE
 ```

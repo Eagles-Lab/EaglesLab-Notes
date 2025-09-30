@@ -26,9 +26,9 @@ yum安装docker-compese
 
 ```bash
 # 旧版本中安装docker-compose的方式
-[root@localhost ~]# yum install -y epel-release
-[root@localhost ~]# yum install docker-compose.noarch -y
-[root@localhost ~]# docker-compose version
+[root@docker-server ~]# yum install -y epel-release
+[root@docker-server ~]# yum install docker-compose.noarch -y
+[root@docker-server ~]# docker-compose version
 docker-compose version 1.18.0, build 8dd22a9
 docker-py version: 2.6.1
 CPython version: 3.6.8
@@ -232,11 +232,11 @@ networks:
 一、编写docker-compose文件
 
 ```yaml
-[root@localhost ~]# mkdir -pv docker-compose/nginx
-[root@localhost ~]# cd docker-compose/nginx
-[root@localhost nginx]# pwd
+[root@docker-server ~]# mkdir -pv docker-compose/nginx
+[root@docker-server ~]# cd docker-compose/nginx
+[root@docker-server nginx]# pwd
 /root/docker-compose/nginx
-[root@localhost nginx]# vim docker-compose.yml
+[root@docker-server nginx]# vim docker-compose.yml
 # docker-compose.yml
 
 services:
@@ -253,16 +253,16 @@ services:
 二、启动容器
 
 ```bash
-[root@localhost nginx]# docker compose up -d
+[root@docker-server nginx]# docker compose up -d
 [+] Running 2/2
  ✔ Network nginx_default  Created                                             0.0s
  ✔ Container nginx_web1   Started                                             0.2s
-[root@localhost nginx]# docker ps
+[root@docker-server nginx]# docker ps
 CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                 NAMES
 09d091a0c1a1   nginx     "/docker-entrypoint.…"   29 seconds ago   Up 28 seconds   0.0.0.0:80->80/tcp, [::]:80->80/tcp   nginx_web1
 
 # 不指定网络的话，会默认创建一个类型为bridge的网络
-[root@localhost nginx]# docker network ls
+[root@docker-server nginx]# docker network ls
 NETWORK ID     NAME            DRIVER    SCOPE
 36f9c2f8e090   bridge          bridge    local
 93ffe4510dd0   host            host      local
@@ -278,7 +278,7 @@ d0456365c64d   nginx_default   bridge    local
 一、编辑docker-compose文件
 
 ```bash
-[root@localhost docker]# cat docker-compose.yml 
+[root@docker-server docker]# cat docker-compose.yml 
 service-nginx:
   image: nginx
   container_name: nginx_web1
@@ -290,7 +290,7 @@ service-tomcat:
   container_name: tomcat_web1
   ports:
     - "8080:8080"
-[root@localhost docker]# docker-compose up -d
+[root@docker-server docker]# docker-compose up -d
 nginx_web1    /docker-entrypoint.sh ngin ...   Up      0.0.0.0:80->80/tcp,:::80->80/tcp                              
 tomcat_web1   catalina.sh run                  Up      0.0.0.0:8080->8080/tcp,:::8080-
                                                        >8080/tcp
@@ -301,14 +301,14 @@ tomcat_web1   catalina.sh run                  Up      0.0.0.0:8080->8080/tcp,::
 - 创建数据卷目录和文件
 
 ```bash
-[root@localhost docker]# mkdir -p /data/nginx
-[root@localhost docker]# echo 'docker nginx' > /data/nginx/index.html
+[root@docker-server docker]# mkdir -p /data/nginx
+[root@docker-server docker]# echo 'docker nginx' > /data/nginx/index.html
 ```
 
 - 编辑配置文件
 
 ```bash
-[root@localhost docker]# cat docker-compose.yml 
+[root@docker-server docker]# cat docker-compose.yml 
 service-nginx:
   image: nginx
   container_name: nginx_web1
@@ -327,7 +327,7 @@ service-tomcat:
 - 访问测试
 
 ```bash
-[root@localhost docker]# curl localhost
+[root@docker-server docker]# curl docker-server
 docker nginx
 ```
 
@@ -384,8 +384,8 @@ volumes:
 运行docker-compose.yml
 
 ```bash
-[root@localhost lnmp]# docker compose up -d
-[root@localhost lnmp]# docker ps
+[root@docker-server lnmp]# docker compose up -d
+[root@docker-server lnmp]# docker ps
 CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS         PORTS                                 NAMES
 825b8630de47   nginx:latest   "/docker-entrypoint.…"   4 minutes ago   Up 4 minutes   0.0.0.0:80->80/tcp, [::]:80->80/tcp   lnmp-web-1
 d1d6339ba0d7   lnmp-php       "docker-php-entrypoi…"   4 minutes ago   Up 4 minutes   9000/tcp                              lnmp-php-1
@@ -509,8 +509,8 @@ volumes:
 测试验证
 
 ```shell
-[root@localhost lnmp]# docker compose up -d
-[root@localhost lnmp]# docker ps
+[root@docker-server lnmp]# docker compose up -d
+[root@docker-server lnmp]# docker ps
 CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS         PORTS                                 NAMES
 825b8630de47   nginx:latest   "/docker-entrypoint.…"   4 minutes ago   Up 4 minutes   0.0.0.0:80->80/tcp, [::]:80->80/tcp   lnmp-web-1
 d1d6339ba0d7   lnmp-php       "docker-php-entrypoi…"   4 minutes ago   Up 4 minutes   9000/tcp                              lnmp-php-1
