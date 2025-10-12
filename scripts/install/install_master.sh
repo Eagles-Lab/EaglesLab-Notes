@@ -34,7 +34,7 @@ fi
 
 # 生成join命令备份
 log_info "保存节点加入命令到 ${ROOT_DIR}/join_command.sh"
-kubeadm token create --print-join-command > ${ROOT_DIR}/join_command.sh 2>/dev/null
+kubeadm token create --print-join-command 2>/dev/null | sed 's/$/ --cri-socket unix:\/\/\/var\/run\/cri-dockerd.sock/' > ${ROOT_DIR}/join_command.sh
 chmod 600 ${ROOT_DIR}/join_command.sh
 
 # 配置kubectl访问权限
@@ -46,7 +46,8 @@ log_info "主节点初始化完成，节点加入命令已保存至 ${ROOT_DIR}/
 
 # 安装网络插件calico
 log_info "安装网络插件calico"
-kubectl apply -f http://file.eagleslab.com:8889/pkg/calico-typha.yaml
+download_file calico-typha.yaml
+kubectl apply -f calico-typha.yaml
 
 # 安装metrics-server
 

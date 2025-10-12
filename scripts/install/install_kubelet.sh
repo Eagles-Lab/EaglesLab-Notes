@@ -84,9 +84,9 @@ log_info "本地RPM包安装成功"
 
 # 启用kubelet服务
 log_info "启用kubelet服务"
-if ! systemctl enable kubelet.service; then
+if ! systemctl enable --now kubelet.service; then
     log_error "无法启用kubelet服务"
     exit 1
 fi
 
-log_info "安装完成！kubelet、kubectl 和 kubeadm ${TARGET_VERSION}已成功安装"
+log_info "安装完成！kubelet、kubectl 和 kubeadm ${TARGET_VERSION} 已成功安装"
