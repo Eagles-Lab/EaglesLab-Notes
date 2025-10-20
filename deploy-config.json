@@ -18,10 +18,10 @@
 		"enabled": false
 	},
 	"Security": {
-		"host": "security.example.com",
+		"host": "110.42.41.82",
 		"port": 22,
-		"user": "deploy",
-		"path": "/home/docs/security",
-		"enabled": false
+		"user": "root",
+		"path": "/opt/1panel/apps/openresty/openresty/www/sites/security.eagleslab.com/index/_book",
+		"enabled": true
 	}
 }
