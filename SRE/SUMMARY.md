@@ -97,7 +97,7 @@
     - [08.Redis集群架构](数据库/Redis_2025/08_Redis集群架构.md)
     - [09.Redis性能优化](数据库/Redis_2025/09_Redis性能优化.md)
     - [2024_Redis课件](数据库/Redis.md)
-  - [Mamcached](数据库/Memcached.md)
+  - [Memcached](数据库/Memcached.md)
 
 - [自动化](自动化/概述.md)
   - [01.文本三剑客](自动化/文本三剑客.md)
