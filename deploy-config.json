@@ -4,10 +4,10 @@
 		"ignore_changes": false
 	},
 	"SRE": {
-		"host": "110.42.41.82",
+		"host": "110.42.61.198",
 		"port": 22,
 		"user": "root",
-		"path": "/opt/1panel/apps/openresty/openresty/www/sites/ncloud.eagleslab.com/index/_book",
+		"path": "/opt/1panel/www/sites/ncloud.eagleslab.com/index/_book",
 		"enabled": true
 	},
 	"Java": {
@@ -18,10 +18,10 @@
 		"enabled": false
 	},
 	"Security": {
-		"host": "110.42.41.82",
+		"host": "110.42.61.198",
 		"port": 22,
 		"user": "root",
-		"path": "/opt/1panel/www/sites/security.eagleslab.com/_book",
-		"enabled": true
+		"path": "/opt/1panel/www/sites/security.eagleslab.com/index/_book",
+		"enabled": false
 	}
 }
