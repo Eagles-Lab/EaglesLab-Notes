@@ -21,7 +21,7 @@
 		"host": "110.42.41.82",
 		"port": 22,
 		"user": "root",
-		"path": "/opt/1panel/apps/openresty/openresty/www/sites/security.eagleslab.com/index/_book",
+		"path": "/opt/1panel/www/sites/security.eagleslab.com/_book",
 		"enabled": true
 	}
 }
