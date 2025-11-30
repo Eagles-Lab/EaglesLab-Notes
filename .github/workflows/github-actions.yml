@@ -2,7 +2,7 @@ name: Deploy Notes
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-deploy:
@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -24,8 +24,8 @@ jobs:
       - name: Build Books
         run: ./scripts/build.sh
         env:
-           BEFORE_SHA: ${{ github.event.before }}
-           CURRENT_SHA: ${{ github.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
 
       - name: Setup SSH Key
         uses: webfactory/ssh-agent@v0.7.0
