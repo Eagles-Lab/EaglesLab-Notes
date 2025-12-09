@@ -1334,6 +1334,7 @@ select * from city where countrycode='USA' limit 10
     - 定点数：精确值数值
     - BIT：位字段值
 
+
 | 类 | 类型 | 说明 |
 |:----|:----|:----|
 | 整数 | tinyint | 极小整数数据类型 (0-255) |
@@ -1352,6 +1353,7 @@ select * from city where countrycode='USA' limit 10
   - 几乎在每种编程语言中都有实现
   - 支持字符集和整理
   - 属于以下其中一类
+
 
 |类|类型|说明|
 |:----|:----|:----|
@@ -3999,4 +4001,5 @@ inet 10.0.0.51/24 brd 10.0.0.255 scope global eth0
 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
     inet 10.0.0.52/24 brd 10.0.0.255 scope global eth0
     inet 10.0.0.55/24 brd 10.0.0.255 scope global secondary eth0:0
+
 ```
