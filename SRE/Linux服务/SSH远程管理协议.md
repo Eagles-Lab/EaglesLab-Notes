@@ -55,11 +55,12 @@ root@192.168.88.20's password:
 
 
 ```shell
-# 将本地文件上传至远程主机
+# 将远程主机上的文件下载至本地
 本地 % scp  root@172.16.175.129:/etc/passwd ./
 root@172.16.175.129's password:
 passwd                                                                                       100%  945     1.2MB/s   00:00
-# 将远程主机上的文件下载至本地
+
+# 将本地文件上传至远程主机
 本地 % scp cmatrix-1.2a.tar.gz root@172.16.175.129:/tmp/
 root@172.16.175.129's password:
 cmatrix-1.2a.tar.gz                                                                          100%   73KB  20.2MB/s   00:00
