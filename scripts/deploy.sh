@@ -2,7 +2,7 @@
 
 # 检查必要依赖：jq（用于解析 JSON 配置）
 if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: 'jq' uninstall "
+    echo "Error: 'jq' not installed"
     exit 1
 fi
 

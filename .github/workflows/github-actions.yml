@@ -20,9 +20,12 @@ jobs:
       - name: Check for course changes
         id: check
         run: |
+          # 从配置读取已启用的课程列表
+          courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' '|' | sed 's/|$//')
+
           # 检查课程目录下的文件变更
           changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          course_dirs=$(echo "$changed_files" | grep -E '^(SRE|Security|Java|Base)/' | cut -d'/' -f1 | sort -u)
+          course_dirs=$(echo "$changed_files" | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
 
           if [ -n "$course_dirs" ]; then
             echo "has-course-changes=true" >> $GITHUB_OUTPUT
