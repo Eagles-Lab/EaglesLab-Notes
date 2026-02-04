@@ -1,7 +1,6 @@
 {
 	"build": {
-		"force": false,
-		"ignore_changes": false
+		"force": false
 	},
 	"SRE": {
 		"host": "110.42.61.198",
