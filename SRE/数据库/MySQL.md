@@ -2544,7 +2544,7 @@ yum install -y percona-toolkit-3.0.11-1.el6.x86_64.rpm
 有能力的可以做成可视化界面：
 Anemometer基于pt-query-digest将MySQL慢查询可视化
 
-慢日志分析工具下载 https://[www.percona.com/downloads/percona-toolkit/LATEST/](http://www.percona.com/downloads/percona-toolkit/LATEST/)
+慢日志分析工具下载 https://www.percona.com/downloads/percona-toolkit/LATEST/
 
 可视化代码下载 https://github.com/box/Anemometer
 
@@ -2812,7 +2812,7 @@ yum -y install epel-release
 #安装epel源
 yum -y install perl perl-devel libaio libaio-devel perl-Time-HiRes perl-DBD-MySQL
 #安装依赖
-wget httpss://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.4.4/binary/redhat/6/x86_64/percona-xtrabackup-24-2.4.4-1.el6.x86_64.rpm
+wget https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.4.4/binary/redhat/6/x86_64/percona-xtrabackup-24-2.4.4-1.el6.x86_64.rpm
 #下载Xtrabackup
 yum localinstall -y percona-xtrabackup-24-2.4.4-1.el6.x86_64.rpm
 # 安装

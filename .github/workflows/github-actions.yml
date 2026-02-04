@@ -3,6 +3,7 @@ name: Deploy Notes
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   build-and-deploy:
