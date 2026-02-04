@@ -190,7 +190,7 @@ Calico是一个纯三层的虚拟网络，它没有复用docker的docker0网桥�
 - 基于三层的”二层“通信，层即vxlan包封装在udp数据包中，要求udp在k8s节点间三层可达；
 - 二层即vxlan封包的源mac地址和目的mac地址是自己的vxlan设备mac和对端vxlan设备mac实现通讯。
 
-![image-20240904143234102](pod与网络/image-202409041432341png)
+![image-20240904143234102](pod与网络/image-20240904143234102.png)
 
 - 数据包封包：封包，在vxlan设备上将pod发来的数据包源、目的mac替换为本机vxlan网卡和对端节点vxlan 网卡的mac。外层udp目的ip地址根据路由和对端vxlan的mac查fdb表获取
 
