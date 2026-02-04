@@ -90,7 +90,7 @@ honkit serve    # Starts preview server at http://localhost:4000
 
 1. 安装 Node.js 22
 2. 全局安装 HonKit
-3. 全局安装插件（mermaid-hybrid、toggle-chapters）
+3. 全局安装插件（mermaid-hybrid、expandable-chapters、expandable-chapters-small、search-plus、flexible-alerts、intopic-toc）
 4. 运行 `scripts/build.sh`
 5. 配置 SSH agent
 6. 运行 `scripts/deploy.sh`
@@ -177,9 +177,12 @@ EaglesLab-Notes/
 | ------------------- | --------------- | -------- |
 | code                | 需要 fork/移植 | - |
 | mermaid-gb3         | mermaid-hybrid | `npm install -g honkit-plugin-mermaid-hybrid` |
-| toggle-chapters     | toggle-chapters | `npm install -g honkit-plugin-toggle-chapters` |
-| expandable-chapters | toggle-chapters | `npm install -g honkit-plugin-toggle-chapters` |
-| search-pro          | search-plus | `npm install -g git+https://github.com/dogatana/honkit-plugin-search-plus.git` |
+| toggle-chapters     | expandable-chapters | `npm install -g gitbook-plugin-expandable-chapters` |
+| expandable-chapters | expandable-chapters | `npm install -g gitbook-plugin-expandable-chapters` |
+| expandable-chapters-small | expandable-chapters-small | `npm install -g gitbook-plugin-expandable-chapters-small` |
+| search-pro          | search-plus | `npm install -g honkit-plugin-search-plus` |
+| flexible-alerts     | flexible-alerts | `npm install -g gitbook-plugin-flexible-alerts` |
+| intopic-toc         | intopic-toc | `npm install -g gitbook-plugin-intopic-toc` |
 
 **为什么需要全局安装？**
 
@@ -190,9 +193,26 @@ HonKit 6.x 的 `PluginResolver` 在初始化时没有传入正确的 `baseDirect
 ```json
 {
   "plugins": [
-    "mermaid-hybrid",      // Mermaid 流程图支持
-    "toggle-chapters"      // 章节折叠
+    "search-plus",              // 增强搜索
+    "flexible-alerts",          // 灵活告警框
+    "intopic-toc",              // 页面内目录
+    "mermaid-hybrid",           // Mermaid 流程图支持
+    "expandable-chapters",      // 章节折叠
+    "expandable-chapters-small" // 章节样式优化
   ]
+}
+```
+
+**expandable-chapters 配置（实现按需展开章节）：**
+
+```json
+{
+  "pluginsConfig": {
+    "expandable-chapters": {},
+    "expandable-chapters-small": {
+      "closeOther": true  // 点击展开一个章节时关闭其他章节
+    }
+  }
 }
 ```
 
@@ -213,7 +233,8 @@ HonKit 6.x 不需要在每个课程目录使用 `package.json` 管理插件依�
 # 全局安装推荐插件（CI 已预装）
 npm install -g honkit
 npm install -g honkit-plugin-mermaid-hybrid
-npm install -g honkit-plugin-toggle-chapters
+npm install -g gitbook-plugin-expandable-chapters gitbook-plugin-expandable-chapters-small
+npm install -g honkit-plugin-search-plus gitbook-plugin-flexible-alerts gitbook-plugin-intopic-toc
 ```
 
 ---
@@ -308,9 +329,9 @@ honkit serve          # 访问 http://localhost:4000
 
 ### 分支策略
 
-- **main**：生产分支，push 触发 CI/CD
+- **main**：生产分支，启用分支保护，只能通过 PR 合并
 - **zhaohao1004**：开发分支，用于测试与验证
-- 通过 PR 将开发分支合并到 main
+- 开发工作流：在开发分支提交 → 创建 PR → 合并到 main → 自动触发 CI/CD
 
 ### URL 格式修复
 
@@ -375,6 +396,14 @@ git commit -m "feat(security): add XSS prevention guide"
 
 ## 变更日志
 
+- 2026-02-04：插件系统更新 - 替换为 expandable-chapters
+  - 替换 toggle-chapters 为 expandable-chapters
+  - 添加 expandable-chapters-small 配合使用
+  - 启用 closeOther 选项实现按需展开章节
+  - 新增 flexible-alerts、intopic-toc 插件
+- 2026-02-04：分支保护规则启用
+  - main 分支只能通过 PR 合并
+  - 禁止绕过分支保护设置
 - 2026-02-04：完成 GitBook → HonKit 6.x 迁移（PR #58 合并）
   - Node.js 升级到 22
   - 删除本地 node_modules（23,595 个文件）
@@ -382,6 +411,5 @@ git commit -m "feat(security): add XSS prevention guide"
   - CI 测试通过，生产部署成功
 - 2026-02-04：添加 workflow_dispatch 支持手动触发 CI
 - 2026-02-04：更新 .gitignore 忽略 node_modules 和 package-lock.json
-- 2026-02-04：插件系统更新 - 全局安装方案，支持 mermaid-hybrid 和 toggle-chapters
 - 2026-02-04：GitHub Actions 添加插件安装步骤
 - 2026-02-04：将本文件中文化（保留命令与技术名词原样）
