@@ -85,6 +85,7 @@ jobs:
         env:
           BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
+          BUILD_COURSES: ${{ needs.check-changes.outputs.changed-courses }}
 
       - name: Setup SSH Key
         uses: webfactory/ssh-agent@v0.7.0
