@@ -22,6 +22,6 @@
 		"port": 22,
 		"user": "root",
 		"path": "/opt/1panel/www/sites/security.eagleslab.com/index/_book",
-		"enabled": false
+		"enabled": true
 	}
 }
