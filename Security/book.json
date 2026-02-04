@@ -15,7 +15,8 @@
         "flexible-alerts",
         "intopic-toc",
         "mermaid-hybrid",
-        "toggle-chapters",
+        "expandable-chapters",
+        "expandable-chapters-small",
         "-lunr",
         "-search"
     ],
@@ -39,10 +40,8 @@
             "isScrollspyActive": true,
             "label": "目录"
         },
-        "toggle-chapters": {
-            "chapters": true,
-            "articles": true
-        }
+        "expandable-chapters": {},
+        "expandable-chapters-small": {}
     },
     "styles": {
         "website": "styles/website.css",

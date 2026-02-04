@@ -23,7 +23,7 @@ jobs:
         run: npm install -g honkit
 
       - name: Install HonKit Plugins
-        run: npm install -g honkit-plugin-mermaid-hybrid honkit-plugin-toggle-chapters honkit-plugin-search-plus gitbook-plugin-flexible-alerts gitbook-plugin-intopic-toc
+        run: npm install -g honkit-plugin-mermaid-hybrid gitbook-plugin-expandable-chapters gitbook-plugin-expandable-chapters-small honkit-plugin-search-plus gitbook-plugin-flexible-alerts gitbook-plugin-intopic-toc
 
       - name: Build Books
         run: ./scripts/build.sh
