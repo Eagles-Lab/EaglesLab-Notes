@@ -55,8 +55,8 @@ build_course() {
     if [ -d "$course" ] && [ -f "$course/SUMMARY.md" ]; then
         (
             cd "$course"
-            gitbook install
-            gitbook build
+            honkit install
+            honkit build
             mkdir -p ../dist/"$course"
             mv _book/* ../dist/"$course"/
             rm -rf _book

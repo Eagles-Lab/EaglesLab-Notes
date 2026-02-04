@@ -4,7 +4,6 @@
     "author": "AaronXu",
     "output.name": "site",
     "language": "zh-hans",
-    "gitbook": "3.2.3",
     "root": ".",
     "links": {
         "sidebar": {
@@ -12,45 +11,9 @@
         }
     },
     "plugins": [
-        "code",
-        "-search",
-        "search-pro",
-        "-github",
-        "splitter",
-        "tbfed-pagefooter",
-        "-donate",
-        "-sharing",
-        "-sharing-plus",
-        "mermaid-gb3",
-        "-prism",
-        "highlight",
-        "styles-less",
-        "toggle-chapters",
-        "multipart",
-        "pageview-count",
-        "ancre-navigation",
-        "expandable-chapters-small",
-        "theme-comscore",
-        "-lunr"
+        "mermaid-hybrid",
+        "toggle-chapters"
     ],
-    "pluginsConfig": {
-        "code": {
-            "copyButtons": true
-        },
-        "tbfed-pagefooter": {
-            "copyright":"学前沿IT，到英格科技!",
-            "modify_label": "本文发布时间：",
-            "modify_format": "YYYY-MM-DD HH:mm:ss"
-        },
-        "prism": {
-            "css": [
-                "prismjs/themes/prism-tomorrow.css"
-            ],
-            "lang": {
-                "flow": "typescript"
-            }
-        }
-    },
     "styles": {
         "website": "styles/website.css",
         "ebook": "styles/ebook.css",

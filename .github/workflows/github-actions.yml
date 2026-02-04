@@ -16,10 +16,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 10.24.1
+          node-version: 22
 
-      - name: Install GitBook
-        run: npm install -g gitbook-cli
+      - name: Install HonKit
+        run: npm install -g honkit
+
+      - name: Install HonKit Plugins
+        run: npm install -g honkit-plugin-mermaid-hybrid honkit-plugin-toggle-chapters
 
       - name: Build Books
         run: ./scripts/build.sh
