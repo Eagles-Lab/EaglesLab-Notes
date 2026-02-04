@@ -6,8 +6,37 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has-course-changes: ${{ steps.check.outputs.has-course-changes }}
+      changed-courses: ${{ steps.check.outputs.changed-courses }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for course changes
+        id: check
+        run: |
+          # 检查课程目录下的文件变更
+          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          course_dirs=$(echo "$changed_files" | grep -E '^(SRE|Security|Java|Base)/' | cut -d'/' -f1 | sort -u)
+
+          if [ -n "$course_dirs" ]; then
+            echo "has-course-changes=true" >> $GITHUB_OUTPUT
+            echo "changed-courses=$course_dirs" >> $GITHUB_OUTPUT
+            echo "Course changes detected: $course_dirs"
+          else
+            echo "has-course-changes=false" >> $GITHUB_OUTPUT
+            echo "No course changes detected, skipping build"
+          fi
+
   build-and-deploy:
     runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.has-course-changes == 'true'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
