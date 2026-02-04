@@ -1,6 +1,6 @@
 {
 	"build": {
-		"force": false,
+		"force": true,
 		"ignore_changes": false
 	},
 	"SRE": {
