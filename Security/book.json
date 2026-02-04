@@ -41,7 +41,9 @@
             "label": "目录"
         },
         "expandable-chapters": {},
-        "expandable-chapters-small": {}
+        "expandable-chapters-small": {
+            "closeOther": true
+        }
     },
     "styles": {
         "website": "styles/website.css",
