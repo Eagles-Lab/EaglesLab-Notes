@@ -24,16 +24,28 @@ jobs:
           courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' '|' | sed 's/|$//')
 
           # 检查课程目录下的文件变更
-          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          course_dirs=$(echo "$changed_files" | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
+          BEFORE_SHA="${{ github.event.before }}"
+          CURRENT_SHA="${{ github.sha }}"
+          EVENT_NAME="${{ github.event_name }}"
 
-          if [ -n "$course_dirs" ]; then
+          # 手动触发或 before SHA 不存在时，默认构建
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ] || ! git rev-parse "$BEFORE_SHA" >/dev/null 2>&1; then
             echo "has-course-changes=true" >> $GITHUB_OUTPUT
-            echo "changed-courses=$course_dirs" >> $GITHUB_OUTPUT
-            echo "Course changes detected: $course_dirs"
+            echo "changed-courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' ' ')" >> $GITHUB_OUTPUT
+            echo "Manual trigger or force push detected, building all enabled courses"
           else
-            echo "has-course-changes=false" >> $GITHUB_OUTPUT
-            echo "No course changes detected, skipping build"
+            # 正常 push，检查变更的课程文件
+            changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")
+            course_dirs=$(echo "$changed_files" | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
+
+            if [ -n "$course_dirs" ]; then
+              echo "has-course-changes=true" >> $GITHUB_OUTPUT
+              echo "changed-courses=$course_dirs" >> $GITHUB_OUTPUT
+              echo "Course changes detected: $course_dirs"
+            else
+              echo "has-course-changes=false" >> $GITHUB_OUTPUT
+              echo "No course changes detected, skipping build"
+            fi
           fi
 
   build-and-deploy:
