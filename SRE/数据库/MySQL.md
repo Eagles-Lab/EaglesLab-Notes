@@ -3297,7 +3297,7 @@ mysql> show global status like 'rpl_semi%';
 注:不难发现，在查询半同步状态是，开启半同步，查询会有延迟时间，关闭之后则没有
 ```
 
-![img](MySQL%E6%95%B0%E6%8D%AE%E5%BA%93\mysql_goal.jpg)
+![img](MySQL数据库/mysql_goal.jpg)
 
 ## 过滤复制
 

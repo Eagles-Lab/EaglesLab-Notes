@@ -1224,14 +1224,11 @@ CPU MASK：0001    0号CPU
 
 **案例分析**
 
-修改 cpu 数量
+修改 nginx worker_processes 数量
 
-1. 使用top命令查看虚拟机中cpu的核心数
-
-<img src="Nginx/image-20240715215937058.png" alt="image-20240715215937058" style="zoom:67%;" />
+1. 查看 cpu 核心数
 
 2. 修改nginx.conf，在全局配置中增加对cpu的控制字段
-
 ```bash
 [root@localhost nginx-1.22.0]# vim /apps/nginx/conf/nginx.conf
 #user  nobody;
@@ -1672,17 +1669,12 @@ server {
 
 完成网站安装
 
-![image-20211106114747284](Nginx/image-20211106114747284.png)
-
 <img src="Nginx/image-20250207201334236.png" alt="image-20250207201334236" style="zoom:80%;" />
 
 下面根据自己的喜好，进行简单的设置就可以正常使用啦！
 
 <img src="Nginx/image-20250207201405074.png" alt="image-20250207201405074" style="zoom:80%;" />
 
-我们也可以直接在这个上面编辑Linux上的文件，比如我们之前创建的php文件
-
-![image-20211106114944358](Nginx/image-20211106114944358.png)
 
 # 友情提示
 

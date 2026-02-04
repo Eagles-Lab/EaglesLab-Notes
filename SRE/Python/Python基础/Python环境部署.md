@@ -125,8 +125,6 @@ Python 的设计哲学与其他编程语言相比，有几个显著的不同之�
 
 <img src="Python环境部署/Python解释器安装1.png" alt="img-Python解释器安装1" style="zoom:80%;" />
 
-<img src="Python环境部署/Python解释器安装2.png" alt="img-Python解释器安装2" style="zoom:80%;" />
-
 **注意**：必须勾选上下面的 “Add Python 3.9 to PATH”（添加到系统环境变量中）
 
 **测试是否安装成功**

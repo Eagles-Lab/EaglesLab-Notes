@@ -107,8 +107,6 @@ KVM 在 Linux 环境中以主机的方式运行，不过只要底层硬件虚拟
 
 ## 开启虚拟化支持
 
-<img src="C:/Users/Atopos/AppData/Roaming/Typora/typora-user-images/image-20240817165427529.png" alt="image-20240817165427529" style="zoom:80%;" />
-
 - 查看CPU支持的功能中是否存在
   - vmx:INTEL的虚拟化功能
   - svm:AMD的虚拟化功能

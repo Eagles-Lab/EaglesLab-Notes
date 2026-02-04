@@ -396,6 +396,9 @@ git commit -m "feat(security): add XSS prevention guide"
 
 ## 变更日志
 
+- 2026-02-04：修复 SRE 文档图片引用
+  - 修复多处图片链接失效（路径编码/文件名缺失/反斜杠等）
+  - 移除 Typora 本地绝对路径与空图片占位引用
 - 2026-02-04：插件系统更新 - 替换为 expandable-chapters
   - 替换 toggle-chapters 为 expandable-chapters
   - 添加 expandable-chapters-small 配合使用
