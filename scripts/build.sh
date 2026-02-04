@@ -19,6 +19,13 @@ mkdir -p dist
 get_changed_directories(){
     local changed_dirs
 
+    # 优先使用环境变量中的课程列表（来自 workflow 的 check-changes）
+    if [ -n "$BUILD_COURSES" ]; then
+        echo "Using courses from workflow check: $BUILD_COURSES" >&2
+        echo "$BUILD_COURSES"
+        return
+    fi
+
     # 如果配置了强制构建，返回所有已启用的课程
     if [ "$FORCE_BUILD" = "true" ]; then
         echo "Force build enabled, building all enabled courses..." >&2
