@@ -8,8 +8,8 @@ EaglesLab-Notes 是一个基于 **GitBook/HonKit** 的技术文档平台，面�
 
 ### 当前状态
 
-- **构建系统**：HonKit 6.1.6（从 GitBook 3.2.3 迁移）
-- **Node.js**：v20+（从 10.24.1 升级）
+- **构建系统**：HonKit 6.1.6（从 GitBook 3.2.3 迁移，2026-02-04）
+- **Node.js**：v22（从 10.24.1 升级）
 - **内容规模**：918 个 Markdown 文件，约 45,000 行
 - **分支**：main（生产），zhaohao1004（开发）
 
@@ -101,19 +101,21 @@ honkit serve    # Starts preview server at http://localhost:4000
 
 ```
 EaglesLab-Notes/
-├── .github/workflows/github-actions.yml  # CI/CD 配置
+├── .github/workflows/github-actions.yml  # CI/CD 配置 (Node.js 22, HonKit 6.x)
 ├── scripts/
 │   ├── build.sh                         # 构建自动化脚本
 │   └── deploy.sh                       # 部署自动化脚本
 ├── deploy-config.json                  # 构建与部署配置
+├── .gitignore                          # 忽略 node_modules/, dist/, _book/
 ├── SRE/                               # SRE 课程
 │   ├── book.json                      # HonKit 配置
 │   ├── SUMMARY.md                     # 课程目录
 │   ├── Python/, Linux/, Docker/, etc.   # 课程章节
-│   └── package.json                   # 插件依赖（HonKit 6.x）
+│   └── styles/                        # 自定义样式
 ├── Security/                          # Security 课程
 │   ├── book.json
-│   └── SUMMARY.md
+│   ├── SUMMARY.md
+│   └── styles/
 ├── Java/                              # Java 课程
 └── Base/                              # 计算机基础课程
 ```
@@ -205,22 +207,13 @@ HonKit 6.x 的 `PluginResolver` 在初始化时没有传入正确的 `baseDirect
 
 ### 插件依赖（`package.json`）
 
-HonKit 6.x 不需要在每个课程目录使用 `package.json` 管理插件依赖，推荐使用全局安装：
+HonKit 6.x 不需要在每个课程目录使用 `package.json` 管理插件依赖。项目已删除所有本地 `node_modules` 和 `package.json`，插件通过全局安装：
 
 ```bash
-# 全局安装推荐插件
+# 全局安装推荐插件（CI 已预装）
+npm install -g honkit
 npm install -g honkit-plugin-mermaid-hybrid
 npm install -g honkit-plugin-toggle-chapters
-```
-
-如果要安装到本地（不推荐，可能无法被 HonKit 识别）：
-
-```json
-{
-  "dependencies": {
-    "honkit-plugin-mermaid-hybrid": "^1.0.2"
-  }
-}
 ```
 
 ---
@@ -287,38 +280,31 @@ honkit serve          # 访问 http://localhost:4000
 
 - 复制 `book.json` 并调整标题/作者等信息
 - 复制 `SUMMARY.md` 并更新链接
-- 复制相关 Markdown 文件
-- 按需为 HonKit 创建 `package.json`
+- 复制相关 Markdown 文件和样式文件
+- 不需要创建 `package.json`（插件全局安装）
 
 ---
 
 ## 重要说明
 
-### GitBook → HonKit 迁移（2026-01）
+### GitBook → HonKit 迁移（2026-02-04）
 
-项目已从 GitBook 3.2.3 迁移到 HonKit 6.1.6：
+项目已从 GitBook 3.2.3 迁移到 HonKit 6.1.6，PR #58 已合并到 main：
 
-- Node.js 从 10.24.1 升级到 22（6.1.6 需要 Node >= 22）
-- 构建脚本更新（移除 `honkit install`）
-- GitHub Actions workflow 更新
+- Node.js 从 10.24.1 升级到 22
+- 构建脚本更新（移除 `honkit install`，使用 `honkit build`）
+- GitHub Actions workflow 更新（Node.js 22 + 全局插件安装）
 - 第三方插件支持：通过全局安装实现
+- 清理本地 node_modules（删除 23,595 个文件）
+- .gitignore 新增 node_modules/ 和 package-lock.json
 
 **当前状态**：
 - 内置插件（highlight、search、lunr、fontsettings、theme-default）正常工作
-- 第三方插件通过全局安装支持（mermaid-hybrid、toggle-chapters 等）
+- 第三方插件通过全局安装支持（mermaid-hybrid、toggle-chapters）
 
-**全局插件清单**：
-
-```bash
-npm list -g --depth=0 | grep honkit
-```
-
-必要时安装缺失插件：
-
-```bash
-npm install -g honkit-plugin-mermaid-hybrid
-npm install -g honkit-plugin-toggle-chapters
-```
+**CI 测试记录**：
+- 手动触发测试 (Run #21668361719) - Success
+- 自动触发测试 (合并到 main) - Success
 
 ### 分支策略
 
@@ -389,7 +375,13 @@ git commit -m "feat(security): add XSS prevention guide"
 
 ## 变更日志
 
-- 2026-02-04：插件系统更新 - 添加全局安装方案，支持 mermaid-hybrid 和 toggle-chapters
-- 2026-02-04：Node.js 版本更新到 22（HonKit 6.1.6 要求）
+- 2026-02-04：完成 GitBook → HonKit 6.x 迁移（PR #58 合并）
+  - Node.js 升级到 22
+  - 删除本地 node_modules（23,595 个文件）
+  - 插件改用全局安装
+  - CI 测试通过，生产部署成功
+- 2026-02-04：添加 workflow_dispatch 支持手动触发 CI
+- 2026-02-04：更新 .gitignore 忽略 node_modules 和 package-lock.json
+- 2026-02-04：插件系统更新 - 全局安装方案，支持 mermaid-hybrid 和 toggle-chapters
 - 2026-02-04：GitHub Actions 添加插件安装步骤
 - 2026-02-04：将本文件中文化（保留命令与技术名词原样）
