@@ -4,8 +4,6 @@
 
 - [基础知识](Tools/提交PR.md)
 
-- [插件功能测试](PluginTest.md)
-
 - [Python](Python/Python介绍.md)
   - [Python基础](Python/Python基础/Python环境部署.md)
     - [01.Python环境部署](Python/Python基础/Python环境部署.md)

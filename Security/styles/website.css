@@ -1,0 +1,112 @@
+.gitbook-link {
+    display: none!important;
+}
+
+/* .fa-align-justify:before {
+    content: "\f039\u00A0\u00A0"!important;
+} */
+
+.fa-align-justify::after {
+    content: "菜单栏"!important;
+}
+
+@media screen and (max-width: 768px){
+    .fa-angle-left:before {
+        content: "上一页"!important;
+        font-size: 20px;
+        border: 1px solid #2E6DA4;
+        color: white;
+        box-shadow: 2px 2px 2px #000;
+        background: #337AB7;
+        border-radius: 6px;
+        padding: 5px;
+    }
+
+    .fa-angle-right:before {
+        content: "下一页"!important;
+        font-size: 20px;
+        border: 1px solid #2E6DA4;
+        color: white;
+        box-shadow: 2px 2px 2px #000;
+        background: #337AB7;
+        border-radius: 6px;
+        padding: 5px;
+    }
+    .fa-align-justify {
+        font-size: 18px;
+        border: 1px solid #2E6DA4;
+        color: white;
+        box-shadow: 2px 2px 2px #000;
+        background: #337AB7;
+        border-radius: 6px;
+        padding: 5px;
+    }
+    .fa-align-justify::after{
+        font-size: 15px;
+        line-height: 19px;
+        vertical-align: middle;
+    }
+    .footer-modification {
+        float: left!important;
+    }
+}
+
+/* GitHub 深色代码高亮样式 */
+/* pre code {
+  background-color: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  border-radius: 6px;
+  padding: 1px;
+} */
+
+/* 注释 */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6a9955;
+}
+
+/* 关键字 */
+.token.punctuation {
+  color: #d4d4d4;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #b5cea8;
+}
+
+/* 选中器/字符串 */
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #ce9178;
+}
+
+/* 操作符 */
+.token.operator,
+.token.entity,
+.token.url {
+  color: #d4d4d4;
+}
+
+.token.function {
+  color: #dcdcaa;
+}
+
+.token.keyword {
+  color: #569cd6;
+}
+
+.token.class-name {
+  color: #4ec9b0;
+}
