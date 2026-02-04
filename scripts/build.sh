@@ -19,7 +19,7 @@ mkdir -p dist
 # 获取变更的目录
 get_changed_directories(){
     local changed_dirs
-    
+
     # 如果配置了强制构建，返回所有包含 SUMMARY.md 的目录
     if [ "$FORCE_BUILD" = "true" ]; then
         echo "Force build enabled, building all courses..." >&2
@@ -27,7 +27,7 @@ get_changed_directories(){
         echo "$changed_dirs"
         return
     fi
-    
+
     # 如果配置了忽略变更，也返回所有目录
     if [ "$IGNORE_CHANGES" = "true" ]; then
         echo "Ignore changes enabled, building all courses..." >&2
