@@ -22,6 +22,7 @@ jobs:
         run: |
           # 从配置读取已启用的课程列表
           courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' '|' | sed 's/|$//')
+          enabled_courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' ' ')
 
           # 检查课程目录下的文件变更
           BEFORE_SHA="${{ github.event.before }}"
@@ -31,11 +32,21 @@ jobs:
           # 手动触发或 before SHA 不存在时，默认构建
           if [ "$EVENT_NAME" = "workflow_dispatch" ] || [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ] || ! git rev-parse "$BEFORE_SHA" >/dev/null 2>&1; then
             echo "has-course-changes=true" >> $GITHUB_OUTPUT
-            echo "changed-courses=$(jq -r 'to_entries | .[] | select(.value.enabled == true) | .key' deploy-config.json | tr '\n' ' ')" >> $GITHUB_OUTPUT
+            echo "changed-courses=$enabled_courses" >> $GITHUB_OUTPUT
             echo "Manual trigger or force push detected, building all enabled courses"
+            exit 0
+          fi
+
+          # 正常 push，检测变更文件
+          changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")
+
+          # 检查是否有 workflow 或配置文件变更（这类变更需要重新构建所有课程）
+          if echo "$changed_files" | grep -qE '^(\.github/workflows/|scripts/|deploy-config\.json|book\.json)'; then
+            echo "has-course-changes=true" >> $GITHUB_OUTPUT
+            echo "changed-courses=$enabled_courses" >> $GITHUB_OUTPUT
+            echo "Workflow/config changes detected, building all enabled courses"
           else
-            # 正常 push，检查变更的课程文件
-            changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")
+            # 只检查课程文件变更
             course_dirs=$(echo "$changed_files" | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
 
             if [ -n "$course_dirs" ]; then
