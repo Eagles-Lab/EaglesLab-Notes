@@ -272,6 +272,7 @@ ln -s /application/mysql-5.6.40 /application/mysql #为了后续写的脚本，�
 cd /application/mysql/support-files	#该文件夹有mysql初始化（预设）配置文件，覆盖文件是因为注释更全。
 cp my-default.cnf /etc/my.cnf
 cp：是否覆盖"/etc/my.cnf"？ y
+mkdir /etc/init.d
 cp mysql.server /etc/init.d/mysqld	#mysql.server包含如何启动mysql的脚本命令，让系统知道通过该命令启动mysql时的动作，该目录存放系统中各种服务的启动/停止脚本
 cd /application/mysql/scripts
 useradd mysql -s /sbin/nologin -M
@@ -313,6 +314,11 @@ server_id = 1	#用作主从的时候生效
 vim /etc/my.cnf
  basedir = /application/mysql/
  datadir = /application/mysql/data
+
+ln -s /usr/lib64/libncurses.so.6.2 /usr/lib64/libncurses.so.5
+ln -s /usr/lib64/libtinfo.so.6.2 /usr/lib64/libtinfo.so.5
+
+ls -l /usr/lib64/libncurses.so.5 /usr/lib64/libtinfo.so.5  #检验软链接是否建立成功
 
 systemctl daemon-reload
 systemctl start mysqld
@@ -3999,4 +4005,5 @@ inet 10.0.0.51/24 brd 10.0.0.255 scope global eth0
 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
     inet 10.0.0.52/24 brd 10.0.0.255 scope global eth0
     inet 10.0.0.55/24 brd 10.0.0.255 scope global secondary eth0:0
+
 ```
