@@ -412,6 +412,10 @@ git commit -m "feat(security): add XSS prevention guide"
   - 删除本地 node_modules（23,595 个文件）
   - 插件改用全局安装
   - CI 测试通过，生产部署成功
+- 2026-02-05：修复 workflow 中中文文件路径变更检测（PR #71）
+  - Git 对包含中文的文件路径会使用引号包裹和转义序列输出
+  - 导致 cut 提取目录名时获取到带引号的名称，正则匹配失败
+  - 修复：使用 sed 移除路径前后的引号后再进行模式匹配
 - 2026-02-04：添加 workflow_dispatch 支持手动触发 CI
 - 2026-02-04：更新 .gitignore 忽略 node_modules 和 package-lock.json
 - 2026-02-04：GitHub Actions 添加插件安装步骤
