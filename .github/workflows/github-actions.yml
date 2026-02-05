@@ -41,13 +41,15 @@ jobs:
           changed_files=$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")
 
           # 检查是否有 workflow 或配置文件变更（这类变更需要重新构建所有课程）
-          if echo "$changed_files" | grep -qE '^(\.github/workflows/|scripts/|deploy-config\.json|book\.json)'; then
+          # 移除路径前后的引号（Git 对包含中文的文件路径会加引号和转义序列）
+          if echo "$changed_files" | sed 's/^"\(.*\)"$/\1/' | grep -qE '^(\.github/workflows/|scripts/|deploy-config\.json|book\.json)'; then
             echo "has-course-changes=true" >> $GITHUB_OUTPUT
             echo "changed-courses=$enabled_courses" >> $GITHUB_OUTPUT
             echo "Workflow/config changes detected, building all enabled courses"
           else
             # 只检查课程文件变更
-            course_dirs=$(echo "$changed_files" | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
+            # 移除路径前后的引号（Git 对包含中文的文件路径会加引号和转义序列）
+            course_dirs=$(echo "$changed_files" | sed 's/^"\(.*\)"$/\1/' | grep -E "^(${courses})/" | cut -d'/' -f1 | sort -u)
 
             if [ -n "$course_dirs" ]; then
               echo "has-course-changes=true" >> $GITHUB_OUTPUT
