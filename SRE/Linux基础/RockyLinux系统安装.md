@@ -98,7 +98,7 @@ RockyLinux系统在企业中一般是安装在服务器上的，但是我们学�
 
 <img src="Linux系统安装/安装RL系统-网络连接.png" alt="img-安装RL系统-网络连接" style="zoom:80%;" />
 
-8. 设置 root 密码，为了方便操作，我们统一设置为`2`,然后点击两次完成：
+8. 设置 root 密码，为了方便操作，我们统一设置为`1`，并勾选`允许root用户使用密码进行SSH登录`，然后点击两次完成：
 
 <img src="Linux系统安装/安装RL系统-设置密码.png" alt="img-安装RL系统-设置密码" style="zoom:80%;" />
 
