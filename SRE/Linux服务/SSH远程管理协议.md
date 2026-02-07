@@ -33,7 +33,7 @@ Last login: Tue Dec 24 15:42:36 2024 from 192.168.88.1
 
 ```shell
 # -P 参数指定远程主机的端口号
-[root@localhost ~]# ssh root@192.168.88.20 -P22
+[root@localhost ~]# ssh root@192.168.88.20 -p22
 # 
 root@192.168.88.20's password:
 Last login: Tue Dec 24 15:43:18 2024 from 192.168.88.10
@@ -193,3 +193,4 @@ PubkeyAuthentication yes
 <img src="SSH远程管理协议/公私钥文件.png" alt="image-公私钥文件" style="zoom:80%;" />
 
 也可以尝试使用 Mobaxterm 工具，选择私钥进行连接。但是 Mobaxterm 连接的时候也可能会遇到报错的问题。这个是受不同工具的影响。如果通过 cmd 能够连接成功的话。就说明我们的密钥和配置是正常的。
+
